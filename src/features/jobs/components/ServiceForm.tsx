@@ -20,7 +20,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { serviceSchema } from '../schemas/service.schema'
 import type { ServiceFormValues } from '../schemas/service.schema'
 import type { Order } from '@/lib/types'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
+import { formatCurrency, formatDateTime, generateWhatsAppUrl, buildJobDoneMessage, buildManagerNotifyMessage } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { User, Clock } from 'lucide-react'
 
@@ -80,6 +81,42 @@ export function ServiceForm({ order }: ServiceFormProps) {
       const { error: uploadError } = await uploadFiles(serviceRecordId, files)
       if (uploadError) {
         toast.error(uploadError)
+      }
+    }
+
+    const completedAt = new Date().toISOString()
+
+    // Module 3: WhatsApp notification to customer on Job Done
+    const whatsappUrl = generateWhatsAppUrl(
+      order.phone,
+      buildJobDoneMessage({
+        customerName: order.customer_name,
+        orderId: order.order_no,
+        technicianName: user.name,
+        completedAt,
+      }),
+    )
+    window.open(whatsappUrl, '_blank')
+
+    // Module 2 Bonus: Notify manager via WhatsApp when job completed
+    const { data: managers } = await supabase
+      .from('users')
+      .select('phone')
+      .eq('role', 'manager')
+    if (managers) {
+      for (const mgr of managers) {
+        if (mgr.phone) {
+          const mgrUrl = generateWhatsAppUrl(
+            mgr.phone,
+            buildManagerNotifyMessage({
+              orderId: order.order_no,
+              customerName: order.customer_name,
+              technicianName: user.name,
+              completedAt,
+            }),
+          )
+          window.open(mgrUrl, '_blank')
+        }
       }
     }
 

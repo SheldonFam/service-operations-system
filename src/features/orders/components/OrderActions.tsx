@@ -150,7 +150,7 @@ export function OrderActions({
       {/* Technician: Start Job */}
       {showStart && (
         <Button
-          className="w-full"
+          className="w-full sm:w-auto"
           size="lg"
           onClick={() => handleStatusUpdate("in_progress", "Job started!")}
           disabled={loading}
@@ -163,9 +163,9 @@ export function OrderActions({
       {/* Technician: Complete Job / Postpone */}
       {showComplete && (
         <>
-          <div className="flex w-full gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
-              className="flex-1"
+              className="w-full sm:w-auto"
               size="lg"
               onClick={() => navigate(`/orders/${order.id}/complete`)}
             >
@@ -173,6 +173,7 @@ export function OrderActions({
               Complete Job
             </Button>
             <Button
+              className="w-full sm:w-auto"
               variant="outline"
               size="lg"
               onClick={() => setPostponeOpen(true)}

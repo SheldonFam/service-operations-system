@@ -45,6 +45,14 @@ export async function generateOrderNo(): Promise<string> {
   return `${prefix}${seq}`;
 }
 
+export function getPhotoUrl(fileUrl: string): string {
+  // If already a full URL, return as-is
+  if (fileUrl.startsWith('http')) return fileUrl;
+  // Otherwise it's a storage path — resolve via Supabase public URL
+  const { data } = supabase.storage.from('service-photos').getPublicUrl(fileUrl);
+  return data.publicUrl;
+}
+
 export function generateWhatsAppUrl(
   phone: string,
   message: string
@@ -67,6 +75,15 @@ export function buildJobDoneMessage(params: {
   completedAt: string;
 }): string {
   return `Hi ${params.customerName},\nJob ${params.orderId} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease check and leave feedback.\nThank you!`;
+}
+
+export function buildManagerNotifyMessage(params: {
+  orderId: string;
+  customerName: string;
+  technicianName: string;
+  completedAt: string;
+}): string {
+  return `Job Completed Notification:\nOrder ${params.orderId} for customer ${params.customerName} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease review the service record.`;
 }
 
 export function buildAssignmentMessage(params: {

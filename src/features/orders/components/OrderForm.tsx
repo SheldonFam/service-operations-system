@@ -26,6 +26,8 @@ export function OrderForm() {
   const { createOrder } = useCreateOrder()
   const { technicians, loading: techLoading } = useTechnicians()
 
+  const firstTechId = technicians[0]?.id
+
   const {
     register,
     handleSubmit,
@@ -48,6 +50,10 @@ export function OrderForm() {
 
   const onSubmit = async (values: OrderFormValues) => {
     if (!user) return
+    // Use displayed technician if user never touched the dropdown
+    if (!values.assigned_technician && firstTechId) {
+      values.assigned_technician = firstTechId
+    }
     const { data, error } = await createOrder(values, user.id)
     if (error) {
       toast.error(error)
@@ -168,12 +174,12 @@ export function OrderForm() {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      value={field.value ?? ''}
-                      onValueChange={(v) => field.onChange(v || undefined)}
+                      value={field.value ?? firstTechId ?? ''}
+                      onValueChange={field.onChange}
                       disabled={techLoading}
                     >
                       <SelectTrigger id={fieldProps.id}>
-                        <SelectValue placeholder={techLoading ? 'Loading technicians...' : 'Select a technician'} />
+                        <SelectValue placeholder={techLoading ? 'Loading...' : ''} />
                       </SelectTrigger>
                       <SelectContent>
                         {technicians.map((tech) => (

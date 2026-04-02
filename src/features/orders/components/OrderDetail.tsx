@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { StatusTimeline } from './StatusTimeline'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
 import type { Order } from '@/lib/types'
-import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, getPhotoUrl } from '@/lib/utils'
 import {
   User,
   Phone,
@@ -29,13 +29,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
   return (
     <div className="space-y-6">
       {/* Status Timeline */}
-      <Card>
-        <CardContent className="pt-6">
-          <StatusTimeline
-            currentStatus={order.status}
-            postponeCount={order.postpone_count}
-          />
-        </CardContent>
+      <Card className="p-3 sm:p-4">
+        <StatusTimeline
+          currentStatus={order.status}
+          postponeCount={order.postpone_count}
+        />
       </Card>
 
       {/* Order Info */}
@@ -188,14 +186,14 @@ export function OrderDetail({ order }: OrderDetailProps) {
                       {order.service_record.photos.map((photo) => (
                         <a
                           key={photo.id}
-                          href={photo.file_url}
+                          href={getPhotoUrl(photo.file_url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="overflow-hidden rounded-md border"
                         >
                           {photo.file_type === 'image' ? (
                             <img
-                              src={photo.file_url}
+                              src={getPhotoUrl(photo.file_url)}
                               alt="Service photo"
                               className="aspect-square object-cover"
                             />

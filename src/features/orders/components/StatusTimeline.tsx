@@ -38,7 +38,7 @@ export function StatusTimeline({
               <div className="flex flex-col items-center">
                 <div
                   className={cn(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-medium sm:h-8 sm:w-8',
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-medium sm:h-8 sm:w-8 sm:text-xs',
                     isCompleted &&
                       'border-primary bg-primary text-primary-foreground',
                     isCurrent &&
@@ -57,7 +57,7 @@ export function StatusTimeline({
                 </div>
                 <span
                   className={cn(
-                    'mt-1.5 max-w-14 text-center text-[9px] leading-tight sm:max-w-16 sm:text-[10px]',
+                    'mt-1 max-w-14 text-center text-[9px] leading-tight sm:mt-1.5 sm:max-w-16 sm:text-[10px]',
                     isCurrent || isCompleted
                       ? 'font-medium text-foreground'
                       : 'text-muted-foreground',
@@ -71,7 +71,7 @@ export function StatusTimeline({
               {!isLast && (
                 <div
                   className={cn(
-                    'mt-[13px] mx-1 h-0.5 flex-1 rounded-full sm:mt-[15px] sm:mx-1.5',
+                    'mt-[11px] mx-0.5 h-0.5 flex-1 rounded-full sm:mt-[15px] sm:mx-1.5',
                     connectorFilled ? 'bg-primary' : 'bg-muted',
                   )}
                 />
