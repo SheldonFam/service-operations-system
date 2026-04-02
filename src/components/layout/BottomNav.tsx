@@ -1,10 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, LayoutDashboard } from 'lucide-react'
+import { ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/orders', label: 'Jobs', icon: ClipboardList },
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
 ]
 
 export function BottomNav() {

@@ -7,6 +7,7 @@ import { OrderCreatePage } from '@/features/orders/pages/OrderCreatePage'
 import { OrderDetailPage } from '@/features/orders/pages/OrderDetailPage'
 import { OrderSummaryPage } from '@/features/orders/pages/OrderSummaryPage'
 import { ServiceCompletePage } from '@/features/jobs/pages/ServiceCompletePage'
+import { DashboardRoute } from './DashboardRoute'
 
 export const router = createBrowserRouter([
   {
@@ -22,12 +23,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <h2 className="text-xl font-semibold text-foreground">Dashboard</h2>
-            <p className="mt-1 text-sm">Coming soon in Phase 3</p>
-          </div>
-        ),
+        element: <DashboardRoute />,
       },
       {
         path: 'orders',

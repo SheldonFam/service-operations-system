@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -61,28 +62,34 @@ export function OrderForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <fieldset disabled={isSubmitting} className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField label="Customer Name" error={errors.customer_name?.message} required>
-            {(fieldProps) => (
-              <Input
-                placeholder="e.g. Ahmad"
-                {...register('customer_name')}
-                {...fieldProps}
-              />
-            )}
-          </FormField>
+        {/* Customer Information */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Customer Information
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="Customer Name" error={errors.customer_name?.message} required>
+              {(fieldProps) => (
+                <Input
+                  placeholder="e.g. Ahmad"
+                  {...register('customer_name')}
+                  {...fieldProps}
+                />
+              )}
+            </FormField>
 
-          <FormField label="Phone" error={errors.phone?.message} required>
-            {(fieldProps) => (
-              <Input
-                placeholder="e.g. 0123456789"
-                {...register('phone')}
-                {...fieldProps}
-              />
-            )}
-          </FormField>
+            <FormField label="Phone" error={errors.phone?.message} required>
+              {(fieldProps) => (
+                <Input
+                  placeholder="e.g. 0123456789"
+                  {...register('phone')}
+                  {...fieldProps}
+                />
+              )}
+            </FormField>
+          </div>
 
-          <FormField label="Address" error={errors.address?.message} className="md:col-span-2" required>
+          <FormField label="Address" error={errors.address?.message} required>
             {(fieldProps) => (
               <Textarea
                 placeholder="Full address"
@@ -91,8 +98,17 @@ export function OrderForm() {
               />
             )}
           </FormField>
+        </div>
 
-          <FormField label="Problem Description" error={errors.problem_description?.message} className="md:col-span-2" required>
+        <Separator />
+
+        {/* Service Details */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Service Details
+          </h2>
+
+          <FormField label="Problem Description" error={errors.problem_description?.message} required>
             {(fieldProps) => (
               <Textarea
                 placeholder="Describe the issue"
@@ -102,70 +118,78 @@ export function OrderForm() {
             )}
           </FormField>
 
-          <FormField label="Service Type" error={errors.service_type?.message} required>
-            {(fieldProps) => (
-              <Controller
-                name="service_type"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id={fieldProps.id} aria-invalid={fieldProps['aria-invalid']}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SERVICE_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
-          </FormField>
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="Service Type" error={errors.service_type?.message} required>
+              {(fieldProps) => (
+                <Controller
+                  name="service_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id={fieldProps.id} aria-invalid={fieldProps['aria-invalid']}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SERVICE_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
+            </FormField>
 
-          <FormField label="Quoted Price (RM)" error={errors.quoted_price?.message} required>
-            {(fieldProps) => (
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                {...register('quoted_price', { valueAsNumber: true })}
-                {...fieldProps}
-              />
-            )}
-          </FormField>
+            <FormField label="Quoted Price (RM)" error={errors.quoted_price?.message} required>
+              {(fieldProps) => (
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    RM
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="pl-10"
+                    {...register('quoted_price', { valueAsNumber: true })}
+                    {...fieldProps}
+                  />
+                </div>
+              )}
+            </FormField>
 
-          <FormField label="Assign Technician (Optional)">
-            {(fieldProps) => (
-              <Controller
-                name="assigned_technician"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(v) => field.onChange(v || undefined)}
-                    disabled={techLoading}
-                  >
-                    <SelectTrigger id={fieldProps.id}>
-                      <SelectValue placeholder={techLoading ? 'Loading technicians...' : 'Select a technician'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {technicians.map((tech) => (
-                        <SelectItem key={tech.id} value={tech.id}>
-                          {tech.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
-          </FormField>
+            <FormField label="Assign Technician">
+              {(fieldProps) => (
+                <Controller
+                  name="assigned_technician"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ''}
+                      onValueChange={(v) => field.onChange(v || undefined)}
+                      disabled={techLoading}
+                    >
+                      <SelectTrigger id={fieldProps.id}>
+                        <SelectValue placeholder={techLoading ? 'Loading technicians...' : 'Select a technician'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {technicians.map((tech) => (
+                          <SelectItem key={tech.id} value={tech.id}>
+                            {tech.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
+            </FormField>
+          </div>
 
-          <FormField label="Admin Notes (Optional)" className="md:col-span-2">
+          <FormField label="Admin Notes">
             {(fieldProps) => (
               <Textarea
                 placeholder="Internal notes"
@@ -176,7 +200,8 @@ export function OrderForm() {
           </FormField>
         </div>
 
-        <div className="flex justify-end gap-2">
+        {/* Actions */}
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"

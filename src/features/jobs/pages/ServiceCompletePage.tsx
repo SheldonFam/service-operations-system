@@ -47,7 +47,13 @@ export function ServiceCompletePage() {
   return (
     <div className="mx-auto max-w-lg space-y-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() =>
+            window.history.length > 1 ? navigate(-1) : navigate('/orders')
+          }
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>

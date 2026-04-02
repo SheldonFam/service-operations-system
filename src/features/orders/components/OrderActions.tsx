@@ -1,17 +1,35 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { useUpdateOrder } from '../hooks/useOrders'
-import { AssignTechDialog } from './AssignTechDialog'
-import { PostponeDialog } from '@/features/jobs/components/PostponeDialog'
-import type { Order, UserRole } from '@/lib/types'
-import { toast } from 'sonner'
-import { UserPlus, CheckCircle, XCircle, Play, Wrench, PauseCircle } from 'lucide-react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useUpdateOrder } from "../hooks/useOrders";
+import { AssignTechDialog } from "./AssignTechDialog";
+import { PostponeDialog } from "@/features/jobs/components/PostponeDialog";
+import type { Order, UserRole } from "@/lib/types";
+import { toast } from "sonner";
+import {
+  UserPlus,
+  CheckCircle,
+  XCircle,
+  Play,
+  Wrench,
+  PauseCircle,
+} from "lucide-react";
 
 interface OrderActionsProps {
-  order: Order
-  userRole: UserRole
-  onUpdated: () => void
+  order: Order;
+  userRole: UserRole;
+  onUpdated: () => void;
 }
 
 export function OrderActions({
@@ -19,35 +37,44 @@ export function OrderActions({
   userRole,
   onUpdated,
 }: OrderActionsProps) {
-  const navigate = useNavigate()
-  const { updateOrder, loading } = useUpdateOrder()
-  const [assignOpen, setAssignOpen] = useState(false)
-  const [postponeOpen, setPostponeOpen] = useState(false)
+  const navigate = useNavigate();
+  const { updateOrder, loading } = useUpdateOrder();
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [postponeOpen, setPostponeOpen] = useState(false);
 
-  const handleStatusUpdate = async (
-    newStatus: string,
-    successMsg: string
-  ) => {
+  const handleStatusUpdate = async (newStatus: string, successMsg: string) => {
     const { error } = await updateOrder(order.id, {
-      status: newStatus as Order['status'],
-    })
+      status: newStatus as Order["status"],
+    });
     if (error) {
-      toast.error(error)
+      toast.error(error);
     } else {
-      toast.success(successMsg)
-      onUpdated()
+      toast.success(successMsg);
+      onUpdated();
     }
+  };
+
+  const showAssign =
+    userRole === "admin" &&
+    (order.status === "new" || order.status === "postponed");
+  const showClose = userRole === "admin" && order.status === "reviewed";
+  const showReview = userRole === "manager" && order.status === "job_done";
+  const showStart = userRole === "technician" && order.status === "assigned";
+  const showComplete =
+    userRole === "technician" && order.status === "in_progress";
+
+  if (!showAssign && !showClose && !showReview && !showStart && !showComplete) {
+    return null;
   }
 
   return (
     <div className="flex flex-wrap gap-2">
       {/* Admin: Assign/Reassign technician */}
-      {userRole === 'admin' &&
-        (order.status === 'new' || order.status === 'postponed') && (
+      {showAssign && (
           <>
             <Button onClick={() => setAssignOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
-              {order.status === 'postponed' ? 'Reassign' : 'Assign Technician'}
+              {order.status === "postponed" ? "Reassign" : "Assign Technician"}
             </Button>
             <AssignTechDialog
               order={order}
@@ -59,48 +86,82 @@ export function OrderActions({
         )}
 
       {/* Admin: Close Order */}
-      {userRole === 'admin' && order.status === 'reviewed' && (
-        <Button
-          onClick={() =>
-            handleStatusUpdate('closed', 'Order closed successfully')
-          }
-          disabled={loading}
-        >
-          <XCircle className="mr-2 h-4 w-4" />
-          Close Order
-        </Button>
+      {showClose && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button disabled={loading}>
+              <XCircle className="mr-2 h-4 w-4" />
+              {loading ? "Closing..." : "Close Order"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Close this order?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will mark order {order.order_no} as closed. This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() =>
+                  handleStatusUpdate("closed", "Order closed successfully")
+                }
+              >
+                Close Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
 
       {/* Manager: Mark as Reviewed */}
-      {userRole === 'manager' && order.status === 'job_done' && (
-        <Button
-          onClick={() =>
-            handleStatusUpdate('reviewed', 'Order marked as reviewed')
-          }
-          disabled={loading}
-        >
-          <CheckCircle className="mr-2 h-4 w-4" />
-          Mark as Reviewed
-        </Button>
+      {showReview && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button disabled={loading}>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              {loading ? "Reviewing..." : "Mark as Reviewed"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mark as reviewed?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Confirm that you have reviewed the service record for order{" "}
+                {order.order_no}.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() =>
+                  handleStatusUpdate("reviewed", "Order marked as reviewed")
+                }
+              >
+                Confirm
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
 
       {/* Technician: Start Job */}
-      {userRole === 'technician' && order.status === 'assigned' && (
+      {showStart && (
         <Button
           className="w-full"
           size="lg"
-          onClick={() =>
-            handleStatusUpdate('in_progress', 'Job started!')
-          }
+          onClick={() => handleStatusUpdate("in_progress", "Job started!")}
           disabled={loading}
         >
           <Play className="mr-2 h-4 w-4" />
-          Start Job
+          {loading ? "Starting..." : "Start Job"}
         </Button>
       )}
 
       {/* Technician: Complete Job / Postpone */}
-      {userRole === 'technician' && order.status === 'in_progress' && (
+      {showComplete && (
         <>
           <div className="flex w-full gap-2">
             <Button
@@ -129,5 +190,5 @@ export function OrderActions({
         </>
       )}
     </div>
-  )
+  );
 }

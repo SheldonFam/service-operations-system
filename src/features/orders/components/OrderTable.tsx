@@ -39,39 +39,47 @@ export function OrderTable({ orders, loading }: OrderTableProps) {
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Order No</TableHead>
+            <TableHead className="whitespace-nowrap">Order No</TableHead>
             <TableHead>Customer</TableHead>
-            <TableHead>Service</TableHead>
-            <TableHead>Technician</TableHead>
-            <TableHead>Price</TableHead>
+            <TableHead className="hidden sm:table-cell">Service</TableHead>
+            <TableHead className="hidden md:table-cell">Technician</TableHead>
+            <TableHead className="hidden sm:table-cell">Price</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead className="hidden md:table-cell">Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map((order) => (
             <TableRow
               key={order.id}
-              className="cursor-pointer"
+              role="link"
+              tabIndex={0}
+              className="cursor-pointer transition-colors hover:bg-muted/50"
               onClick={() => navigate(`/orders/${order.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  navigate(`/orders/${order.id}`)
+                }
+              }}
             >
-              <TableCell className="font-medium">{order.order_no}</TableCell>
+              <TableCell className="whitespace-nowrap font-medium">{order.order_no}</TableCell>
               <TableCell>{order.customer_name}</TableCell>
-              <TableCell>{order.service_type}</TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">{order.service_type}</TableCell>
+              <TableCell className="hidden md:table-cell">
                 {order.technician?.name ?? (
                   <span className="text-muted-foreground">Unassigned</span>
                 )}
               </TableCell>
-              <TableCell>{formatCurrency(order.quoted_price)}</TableCell>
+              <TableCell className="hidden sm:table-cell">{formatCurrency(order.quoted_price)}</TableCell>
               <TableCell>
                 <StatusBadge status={order.status} />
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell className="hidden md:table-cell text-muted-foreground">
                 {formatDate(order.created_at)}
               </TableCell>
             </TableRow>

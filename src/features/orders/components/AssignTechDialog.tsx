@@ -21,6 +21,7 @@ import { useTechnicians, useUpdateOrder } from '../hooks/useOrders'
 import { assignTechSchema } from '../schemas/order.schema'
 import type { AssignTechFormValues } from '../schemas/order.schema'
 import type { Order } from '@/lib/types'
+import { generateWhatsAppUrl, buildAssignmentMessage } from '@/lib/utils'
 import { toast } from 'sonner'
 
 interface AssignTechDialogProps {
@@ -65,6 +66,20 @@ export function AssignTechDialog({
     if (error) {
       toast.error(error)
       return
+    }
+    const tech = technicians.find((t) => t.id === values.technician_id)
+    if (tech?.phone) {
+      const url = generateWhatsAppUrl(
+        tech.phone,
+        buildAssignmentMessage({
+          technicianName: tech.name,
+          orderId: order.order_no,
+          customerName: order.customer_name,
+          address: order.address,
+          serviceType: order.service_type,
+        }),
+      )
+      window.open(url, '_blank')
     }
     toast.success('Technician assigned successfully')
     reset()

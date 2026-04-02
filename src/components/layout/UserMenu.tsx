@@ -29,19 +29,18 @@ export function UserMenu() {
         <Avatar className="h-8 w-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
-        <div className="hidden text-left md:block">
-          <p className="text-sm font-medium leading-none">{user.name}</p>
-          <Badge variant="secondary" className="mt-1 text-[10px] capitalize">
-            {user.role}
-          </Badge>
-        </div>
+        <span className="hidden text-sm font-medium md:inline">
+          {user.name}
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>
-          <p>{user.name}</p>
-          <p className="text-xs font-normal text-muted-foreground">
-            {user.email}
-          </p>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">
+              {user.role}
+            </Badge>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>

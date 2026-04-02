@@ -175,7 +175,7 @@ export function ServiceForm({ order }: ServiceFormProps) {
               </span>
             </div>
 
-            <FormField label="Remarks (Optional)">
+            <FormField label="Remarks">
               {(fieldProps) => (
                 <Textarea
                   placeholder="Any additional notes..."

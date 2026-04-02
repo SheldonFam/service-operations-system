@@ -9,8 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { StatusTimeline } from './StatusTimeline'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
 import type { Order } from '@/lib/types'
-import { formatCurrency, formatDateTime, cn, generateWhatsAppUrl, buildJobDoneMessage } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
 import {
   User,
   Phone,
@@ -20,7 +19,6 @@ import {
   DollarSign,
   Clock,
   MessageSquare,
-  MessageCircle,
 } from 'lucide-react'
 
 interface OrderDetailProps {
@@ -215,35 +213,6 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardContent>
         </Card>
       )}
-      {/* WhatsApp Notification */}
-      {order.service_record &&
-        ['job_done', 'reviewed', 'closed'].includes(order.status) && (
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full border-green-300 text-green-700 hover:bg-green-50"
-            asChild
-          >
-            <a
-              href={generateWhatsAppUrl(
-                order.phone,
-                buildJobDoneMessage({
-                  customerName: order.customer_name,
-                  orderId: order.order_no,
-                  technicianName: order.technician?.name ?? 'Technician',
-                  completedAt:
-                    order.service_record.completed_at ??
-                    order.updated_at,
-                })
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Send WhatsApp to Customer
-            </a>
-          </Button>
-        )}
     </div>
   )
 }
