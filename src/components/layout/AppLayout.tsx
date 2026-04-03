@@ -4,6 +4,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import { AdminSidebar } from './AdminSidebar'
 import { BottomNav } from './BottomNav'
 import { Header } from './Header'
+import { AiChatWindow } from '@/features/ai/components/AiChatWindow'
 import { cn } from '@/lib/utils'
 
 export function AppLayout() {
@@ -22,6 +23,8 @@ export function AppLayout() {
     )
   }
 
+  const isManager = role === 'manager'
+
   return (
     <SidebarProvider>
       <AdminSidebar />
@@ -31,6 +34,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {isManager && <AiChatWindow />}
     </SidebarProvider>
   )
 }

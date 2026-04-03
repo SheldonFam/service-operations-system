@@ -27,14 +27,14 @@ export const orderSchema = z.object({
     .number()
     .positive('Price must be greater than 0')
     .max(100000, 'Price must be under RM 100,000'),
-  assigned_technician: z.string().uuid('Invalid technician').optional(),
+  assigned_technician: z.uuid({ error: 'Invalid technician' }).optional(),
   admin_notes: z.string().max(500, 'Notes must be under 500 characters').optional(),
 })
 
 export type OrderFormValues = z.infer<typeof orderSchema>
 
 export const assignTechSchema = z.object({
-  technician_id: z.string().uuid('Please select a technician'),
+  technician_id: z.uuid({ error: 'Please select a technician' }),
 })
 
 export type AssignTechFormValues = z.infer<typeof assignTechSchema>
