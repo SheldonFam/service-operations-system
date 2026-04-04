@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react'
 export function ServiceCompletePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { order, loading } = useOrder(id!)
+  const { order, loading } = useOrder(id ?? '')
 
   if (loading) {
     return (
@@ -34,9 +34,7 @@ export function ServiceCompletePage() {
   if (order.status !== 'in_progress') {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">
-          This job cannot be completed in its current status.
-        </p>
+        <p className="text-muted-foreground">This job cannot be completed in its current status.</p>
         <Button variant="link" onClick={() => navigate(`/orders/${order.id}`)}>
           Back to job detail
         </Button>
@@ -50,9 +48,8 @@ export function ServiceCompletePage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() =>
-            window.history.length > 1 ? navigate(-1) : navigate('/orders')
-          }
+          aria-label="Go back"
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/orders'))}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

@@ -57,6 +57,9 @@ export interface ServiceRecord {
   extra_charges: number
   final_amount: number
   remarks: string | null
+  payment_amount: number | null
+  payment_method: PaymentMethod | null
+  receipt_photo: string | null
   completed_at: string
   created_at: string
   photos?: ServicePhoto[]

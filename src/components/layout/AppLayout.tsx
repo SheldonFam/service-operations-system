@@ -2,7 +2,6 @@ import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AdminSidebar } from './AdminSidebar'
-import { BottomNav } from './BottomNav'
 import { Header } from './Header'
 import { cn } from '@/lib/utils'
 
@@ -14,10 +13,9 @@ export function AppLayout() {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex-1 px-4 py-4 pb-20">
+        <main className="flex-1 px-4 py-4">
           <Outlet />
         </main>
-        <BottomNav />
       </div>
     )
   }

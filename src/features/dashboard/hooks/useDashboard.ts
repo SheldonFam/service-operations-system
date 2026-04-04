@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export type DateRange = 'week' | 'month' | 'all'
@@ -52,14 +52,14 @@ export function useDashboard(range: DateRange) {
     total_revenue: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [fetchKey, setFetchKey] = useState(0)
+  const fetchIdRef = useRef(0)
 
   useEffect(() => {
-    let cancelled = false
+    const id = ++fetchIdRef.current
 
     async function fetchData() {
-      setLoading(true)
-
       let query = supabase
         .from('orders')
         .select(
@@ -71,9 +71,17 @@ export function useDashboard(range: DateRange) {
         query = query.gte('created_at', dateFilter)
       }
 
-      const { data } = await query
+      const { data, error: queryError } = await query
 
-      if (cancelled) return
+      if (fetchIdRef.current !== id) return
+
+      if (queryError) {
+        setError(queryError.message)
+        setLoading(false)
+        return
+      }
+
+      setError(null)
 
       const orders = (data ?? []) as unknown as RawOrder[]
 
@@ -142,12 +150,12 @@ export function useDashboard(range: DateRange) {
     }
 
     fetchData()
-    return () => {
-      cancelled = true
-    }
   }, [range, fetchKey])
 
-  const refetch = useCallback(() => setFetchKey((k) => k + 1), [])
+  const refetch = useCallback(() => {
+    setLoading(true)
+    setFetchKey((k) => k + 1)
+  }, [])
 
-  return { technicians, summary, loading, refetch }
+  return { technicians, summary, loading, error, refetch }
 }

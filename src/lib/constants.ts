@@ -1,4 +1,4 @@
-import type { OrderStatus, ServiceType } from "./types";
+import type { OrderStatus, PaymentMethod, ServiceType } from "./types";
 
 export const SERVICE_TYPES: ServiceType[] = [
   "Cleaning",
@@ -60,6 +60,13 @@ export const STATUS_CONFIG: Record<
     className: "bg-gray-200 text-gray-500",
   },
 };
+
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  'Cash',
+  'Bank Transfer',
+  'Card',
+  'E-Wallet',
+];
 
 export const SERVICE_TYPE_COLORS: Record<ServiceType, string> = {
   Cleaning: "bg-blue-100 text-blue-700",

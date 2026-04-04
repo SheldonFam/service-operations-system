@@ -1,11 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,7 +13,7 @@ import { CheckCircle2, PlusCircle, ClipboardList, Phone } from 'lucide-react'
 export function OrderSummaryPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { order, loading } = useOrder(id!)
+  const { order, loading } = useOrder(id ?? '')
 
   if (loading) {
     return (

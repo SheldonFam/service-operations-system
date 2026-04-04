@@ -1,12 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from './StatusBadge'
 import type { Order } from '@/lib/types'
@@ -31,11 +24,7 @@ export function OrderTable({ orders, loading }: OrderTableProps) {
   }
 
   if (orders.length === 0) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        No orders found
-      </div>
-    )
+    return <div className="py-12 text-center text-muted-foreground">No orders found</div>
   }
 
   return (
@@ -56,8 +45,8 @@ export function OrderTable({ orders, loading }: OrderTableProps) {
           {orders.map((order) => (
             <TableRow
               key={order.id}
-              role="link"
               tabIndex={0}
+              aria-label={`Order ${order.order_no} — ${order.customer_name}`}
               className="cursor-pointer transition-colors hover:bg-muted/50"
               onClick={() => navigate(`/orders/${order.id}`)}
               onKeyDown={(e) => {
@@ -71,9 +60,7 @@ export function OrderTable({ orders, loading }: OrderTableProps) {
               <TableCell>{order.customer_name}</TableCell>
               <TableCell className="hidden sm:table-cell">{order.service_type}</TableCell>
               <TableCell className="hidden md:table-cell">
-                {order.technician?.name ?? (
-                  <span className="text-muted-foreground">Unassigned</span>
-                )}
+                {order.technician?.name ?? <span className="text-muted-foreground">Unassigned</span>}
               </TableCell>
               <TableCell className="hidden sm:table-cell">{formatCurrency(order.quoted_price)}</TableCell>
               <TableCell>
