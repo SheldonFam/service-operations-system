@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   esbuild: {
-    drop: mode === "production" ? ["console", "debugger"] : [],
+    drop: mode === "production" ? ["console", "debugger"] as const : undefined,
   },
   optimizeDeps: {
     include: ["react", "react-dom", "react-router-dom"],
