@@ -74,6 +74,7 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
             <FilePreview file={file} />
             <button
               type="button"
+              aria-label={`Remove ${file.name}`}
               onClick={() => handleRemove(index)}
               className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
             >

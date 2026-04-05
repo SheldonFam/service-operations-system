@@ -71,11 +71,26 @@ export function OrderForm() {
           <h2 className="text-sm font-medium text-muted-foreground">Customer Information</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Customer Name" error={errors.customer_name?.message} required>
-              {(fieldProps) => <Input placeholder="e.g. Ahmad" {...register('customer_name')} {...fieldProps} />}
+              {(fieldProps) => (
+                <Input
+                  placeholder="e.g. Ahmad"
+                  autoComplete="name"
+                  {...register('customer_name')}
+                  {...fieldProps}
+                />
+              )}
             </FormField>
 
             <FormField label="Phone" error={errors.phone?.message} required>
-              {(fieldProps) => <Input placeholder="e.g. 0123456789" {...register('phone')} {...fieldProps} />}
+              {(fieldProps) => (
+                <Input
+                  type="tel"
+                  placeholder="e.g. 0123456789"
+                  autoComplete="tel"
+                  {...register('phone')}
+                  {...fieldProps}
+                />
+              )}
             </FormField>
           </div>
 
