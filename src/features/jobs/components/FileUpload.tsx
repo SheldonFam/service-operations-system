@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useCallback, useSyncExternalStore } from 'react'
 import { Button } from '@/components/ui/button'
 import { ImagePlus, X, FileText, Film } from 'lucide-react'
 
@@ -10,30 +10,32 @@ interface FileUploadProps {
   onFilesChange: (files: File[]) => void
 }
 
-// Fix #3: Manage blob URLs with proper cleanup to prevent memory leaks
 function useObjectUrl(file: File) {
-  const [url, setUrl] = useState('')
+  const urlRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(file)
-    setUrl(objectUrl)
-    return () => URL.revokeObjectURL(objectUrl)
-  }, [file])
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      urlRef.current = URL.createObjectURL(file)
+      onStoreChange()
+      return () => {
+        if (urlRef.current) {
+          URL.revokeObjectURL(urlRef.current)
+          urlRef.current = null
+        }
+      }
+    },
+    [file],
+  )
+  const getSnapshot = useCallback(() => urlRef.current ?? '', [])
 
-  return url
+  return useSyncExternalStore(subscribe, getSnapshot)
 }
 
 function FilePreview({ file }: { file: File }) {
   const url = useObjectUrl(file)
 
   if (file.type.startsWith('image')) {
-    return (
-      <img
-        src={url}
-        alt={file.name}
-        className="h-full w-full object-cover"
-      />
-    )
+    return <img src={url} alt={file.name} className="h-full w-full object-cover" />
   }
   if (file.type.startsWith('video')) {
     return (
@@ -68,13 +70,11 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         {files.map((file, index) => (
-          <div
-            key={`${file.name}-${index}`}
-            className="relative aspect-square overflow-hidden rounded-md border"
-          >
+          <div key={`${file.name}-${index}`} className="relative aspect-square overflow-hidden rounded-md border">
             <FilePreview file={file} />
             <button
               type="button"
+              aria-label={`Remove ${file.name}`}
               onClick={() => handleRemove(index)}
               className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
             >
@@ -89,20 +89,8 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
 
       {files.length < MAX_FILES && (
         <div>
-          <input
-            ref={inputRef}
-            type="file"
-            accept={ACCEPTED_TYPES}
-            multiple
-            onChange={handleAdd}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => inputRef.current?.click()}
-          >
+          <input ref={inputRef} type="file" accept={ACCEPTED_TYPES} multiple onChange={handleAdd} className="hidden" />
+          <Button type="button" variant="outline" className="w-full" onClick={() => inputRef.current?.click()}>
             <ImagePlus className="mr-2 h-4 w-4" />
             Add Photos ({files.length}/{MAX_FILES})
           </Button>

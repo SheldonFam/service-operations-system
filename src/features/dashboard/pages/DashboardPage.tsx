@@ -32,7 +32,7 @@ export function DashboardPage() {
               key={r.value}
               onClick={() => setRange(r.value)}
               className={cn(
-                'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 range === r.value
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',

@@ -24,13 +24,11 @@ export function JobListPage() {
     return jobs.filter((j) => statuses.includes(j.status))
   }, [jobs, tab])
 
-  const counts = useMemo(() => {
-    return {
-      pending: jobs.filter((j) => TAB_STATUSES.pending.includes(j.status)).length,
-      in_progress: jobs.filter((j) => TAB_STATUSES.in_progress.includes(j.status)).length,
-      completed: jobs.filter((j) => TAB_STATUSES.completed.includes(j.status)).length,
-    }
-  }, [jobs])
+  const counts = {
+    pending: jobs.filter((j) => TAB_STATUSES.pending.includes(j.status)).length,
+    in_progress: jobs.filter((j) => TAB_STATUSES.in_progress.includes(j.status)).length,
+    completed: jobs.filter((j) => TAB_STATUSES.completed.includes(j.status)).length,
+  }
 
   return (
     <div className="space-y-4">

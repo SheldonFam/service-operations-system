@@ -21,8 +21,16 @@ export function JobCard({ order }: JobCardProps) {
 
   return (
     <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
+      tabIndex={0}
+      aria-label={`Job ${order.order_no} — ${order.customer_name}`}
+      className="cursor-pointer transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       onClick={() => navigate(`/orders/${order.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          navigate(`/orders/${order.id}`)
+        }
+      }}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">

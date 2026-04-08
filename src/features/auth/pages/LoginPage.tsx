@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { FormField } from '@/components/ui/form-field'
 import { Snowflake } from 'lucide-react'
+import { Spinner } from '@/components/Spinner'
 
 export function LoginPage() {
   const { user, signIn, loading: authLoading } = useAuth()
@@ -34,11 +35,7 @@ export function LoginPage() {
   })
 
   if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <Spinner />
   }
 
   if (user) {

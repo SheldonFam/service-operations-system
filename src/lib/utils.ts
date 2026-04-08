@@ -29,20 +29,9 @@ export function formatCurrency(amount: number): string {
 }
 
 export async function generateOrderNo(): Promise<string> {
-  const today = new Date();
-  const dateStr =
-    today.getFullYear().toString() +
-    String(today.getMonth() + 1).padStart(2, "0") +
-    String(today.getDate()).padStart(2, "0");
-  const prefix = `ORD-${dateStr}-`;
-
-  const { count } = await supabase
-    .from("orders")
-    .select("*", { count: "exact", head: true })
-    .like("order_no", `${prefix}%`);
-
-  const seq = String((count ?? 0) + 1).padStart(3, "0");
-  return `${prefix}${seq}`;
+  const { data, error } = await supabase.rpc("generate_order_no");
+  if (error) throw new Error(`Failed to generate order number: ${error.message}`);
+  return data as string;
 }
 
 export function getPhotoUrl(fileUrl: string): string {

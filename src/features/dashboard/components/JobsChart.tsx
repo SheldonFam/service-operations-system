@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
 import type { TechnicianKPI } from '../hooks/useDashboard'
 
 interface JobsChartProps {
@@ -42,9 +41,7 @@ export function JobsChart({ technicians }: JobsChartProps) {
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={cn(
-                    'h-full rounded-full bg-primary transition-all',
-                  )}
+                  className="h-full rounded-full bg-primary transition-[width]"
                   style={{ width: `${pct}%` }}
                 />
               </div>
