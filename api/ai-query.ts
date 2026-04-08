@@ -2,10 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+const supabase = createClient(process.env.VITE_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -20,11 +17,13 @@ interface OrderRow {
   updated_at: string
   postpone_count: number
   technician: { id: string; name: string } | null
-  service_record: {
-    work_done: string
-    final_amount: number
-    completed_at: string
-  }[] | null
+  service_record:
+    | {
+        work_done: string
+        final_amount: number
+        completed_at: string
+      }[]
+    | null
 }
 
 async function fetchContextData() {
@@ -47,10 +46,7 @@ async function fetchContextData() {
   // Flatten service_record arrays to single objects
   const cleanOrders = ((orders as OrderRow[] | null) ?? []).map((o) => ({
     ...o,
-    service_record:
-      Array.isArray(o.service_record) && o.service_record.length > 0
-        ? o.service_record[0]
-        : null,
+    service_record: Array.isArray(o.service_record) && o.service_record.length > 0 ? o.service_record[0] : null,
   }))
 
   return { orders: cleanOrders, technicians: technicians ?? [] }
@@ -92,7 +88,7 @@ ORDERS (most recent 200):
 ${JSON.stringify(orders, null, 2)}
 `
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const result = await model.generateContent([
       { text: SYSTEM_PROMPT },
@@ -105,8 +101,6 @@ ${JSON.stringify(orders, null, 2)}
     return res.status(200).json({ answer: response })
   } catch (error) {
     console.error('AI query error:', error)
-    return res
-      .status(500)
-      .json({ error: 'Failed to process your question. Please try again.' })
+    return res.status(500).json({ error: 'Failed to process your question. Please try again.' })
   }
 }
