@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,11 +24,7 @@ export function OrderListPage() {
 
   // Debounce search via useDeferredValue — low-priority update, no extra state
   const deferredSearch = useDeferredValue(search)
-  const options = useMemo(
-    () => ({ status: statusFilter, search: deferredSearch || undefined }),
-    [statusFilter, deferredSearch],
-  )
-  const { orders, loading } = useOrders(options)
+  const { orders, loading } = useOrders({ status: statusFilter, search: deferredSearch || undefined })
 
   return (
     <div className="space-y-4">

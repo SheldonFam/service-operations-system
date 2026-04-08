@@ -13,8 +13,6 @@ interface UseOrdersOptions {
   search?: string
 }
 
-/** Only the columns that exist on the `orders` table — prevents accidentally
- *  sending joined/virtual fields (technician, service_record) to Supabase. */
 type OrderUpdatable = Partial<
   Pick<Order, 'status' | 'assigned_technician' | 'postpone_reason' | 'postpone_count' | 'admin_notes'>
 >
@@ -45,7 +43,9 @@ export function useOrders(options?: UseOrdersOptions) {
   const [error, setError] = useState<string | null>(null)
   const [fetchKey, setFetchKey] = useState(0)
   const fetchIdRef = useRef(0)
-  // Serialize options to a stable string so inline objects don't cause re-fetches
+  // Serialize options to a stable string. Callers can pass an inline object —
+  // the effect re-fires only when status/search actually change, not when
+  // a new object reference is created on each render.
   const optionsKey = `${options?.status ?? ''}|${options?.search ?? ''}`
 
   useEffect(() => {
@@ -57,6 +57,8 @@ export function useOrders(options?: UseOrdersOptions) {
       setError(queryError?.message ?? null)
       setLoading(false)
     })
+    // Intentionally omit `options` — it's an inline object that changes
+    // reference every render. We use the serialized `optionsKey` instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optionsKey, fetchKey])
 
@@ -92,8 +94,6 @@ export function useOrder(id: string) {
         if (cancelled) return
 
         if (data) {
-          // Supabase returns one-to-many joins as arrays even for logically
-          // 1:1 relations (one order → one service_record). Unwrap it.
           const record = data as Record<string, unknown>
           if (Array.isArray(record.service_record)) {
             record.service_record = record.service_record.length > 0 ? record.service_record[0] : null
@@ -125,7 +125,7 @@ export function useOrder(id: string) {
 export function useCreateOrder() {
   const [loading, setLoading] = useState(false)
 
-  const createOrder = useCallback(async (values: OrderFormValues, createdBy: string) => {
+  const createOrder = async (values: OrderFormValues, createdBy: string) => {
     setLoading(true)
     try {
       const orderNo = await generateOrderNo()
@@ -158,7 +158,7 @@ export function useCreateOrder() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   return { createOrder, loading }
 }
@@ -170,7 +170,7 @@ export function useCreateOrder() {
 export function useUpdateOrder() {
   const [loading, setLoading] = useState(false)
 
-  const updateOrder = useCallback(async (id: string, updates: OrderUpdatable) => {
+  const updateOrder = async (id: string, updates: OrderUpdatable) => {
     setLoading(true)
     try {
       const { error } = await supabase.from('orders').update(updates).eq('id', id)
@@ -180,7 +180,7 @@ export function useUpdateOrder() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   return { updateOrder, loading }
 }
@@ -199,7 +199,7 @@ function loadTechnicians(): Promise<User[]> {
   techInflight = Promise.resolve(supabase.from('users').select('*').eq('role', 'technician').order('name')).then(
     ({ data }) => {
       const result = (data as User[]) ?? []
-      if (result.length > 0) techCache = result // only cache success
+      if (result.length > 0) techCache = result
       techInflight = undefined
       return result
     },

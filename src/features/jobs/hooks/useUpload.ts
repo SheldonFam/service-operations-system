@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 function getFileType(file: File): 'image' | 'video' | 'pdf' {
@@ -11,7 +11,7 @@ export function useUpload() {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
 
-  const uploadFiles = useCallback(async (serviceRecordId: string, files: File[]) => {
+  const uploadFiles = async (serviceRecordId: string, files: File[]) => {
     if (files.length === 0) return { urls: [], error: null }
 
     setUploading(true)
@@ -45,7 +45,7 @@ export function useUpload() {
     } finally {
       setUploading(false)
     }
-  }, [])
+  }
 
   return { uploadFiles, uploading, progress }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export type DateRange = 'week' | 'month' | 'all'
@@ -52,8 +52,6 @@ export function useDashboard(range: DateRange) {
     total_revenue: 0,
   })
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [fetchKey, setFetchKey] = useState(0)
   const fetchIdRef = useRef(0)
 
   useEffect(() => {
@@ -76,12 +74,9 @@ export function useDashboard(range: DateRange) {
       if (fetchIdRef.current !== id) return
 
       if (queryError) {
-        setError(queryError.message)
         setLoading(false)
         return
       }
-
-      setError(null)
 
       const orders = (data ?? []) as unknown as RawOrder[]
 
@@ -150,12 +145,7 @@ export function useDashboard(range: DateRange) {
     }
 
     fetchData()
-  }, [range, fetchKey])
+  }, [range])
 
-  const refetch = useCallback(() => {
-    setLoading(true)
-    setFetchKey((k) => k + 1)
-  }, [])
-
-  return { technicians, summary, loading, error, refetch }
+  return { technicians, summary, loading }
 }
