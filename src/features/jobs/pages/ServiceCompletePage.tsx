@@ -1,41 +1,30 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PageLoader } from '@/app/lazy-pages'
+import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { ServiceForm } from '../components/ServiceForm'
 import { useOrder } from '@/features/orders/hooks/useOrders'
+import { useGoBack } from '@/hooks/use-go-back'
+import { canComplete } from '@/lib/business-rules'
 import { ArrowLeft } from 'lucide-react'
 
 export function ServiceCompletePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { order, loading } = useOrder(id ?? '')
+  const goBack = useGoBack()
+  const { data: order, isPending } = useOrder(id ?? '')
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    )
-  }
+  if (isPending) return <PageLoader />
 
   if (!order) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-muted-foreground">Order not found</p>
-        <Button variant="link" onClick={() => navigate('/orders')}>
-          Back to jobs
-        </Button>
-      </div>
-    )
+    return <NotFoundFallback backLabel="Back to jobs" />
   }
 
-  if (order.status !== 'in_progress') {
+  if (!canComplete(order.status)) {
     return (
       <div className="py-12 text-center">
         <p className="text-muted-foreground">This job cannot be completed in its current status.</p>
-        <Button variant="link" onClick={() => navigate(`/orders/${order.id}`)}>
+        <Button variant="link" onClick={() => void navigate(`/orders/${order.id}`)}>
           Back to job detail
         </Button>
       </div>
@@ -49,9 +38,9 @@ export function ServiceCompletePage() {
           variant="ghost"
           size="icon"
           aria-label="Go back"
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/orders'))}
+          onClick={goBack}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-xl font-semibold">Complete Job</h1>

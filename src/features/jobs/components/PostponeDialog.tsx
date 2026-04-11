@@ -21,14 +21,12 @@ interface PostponeDialogProps {
   order: Order
   open: boolean
   onClose: () => void
-  onPostponed: () => void
 }
 
 export function PostponeDialog({
   order,
   open,
   onClose,
-  onPostponed,
 }: PostponeDialogProps) {
   const { postponeJob } = usePostponeJob()
 
@@ -55,12 +53,11 @@ export function PostponeDialog({
     }
     toast.success('Job postponed')
     reset()
-    onPostponed()
     onClose()
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !isSubmitting && handleClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Postpone Job</DialogTitle>
@@ -73,6 +70,7 @@ export function PostponeDialog({
             <FormField label="Reason" error={errors.reason?.message} required>
               {(fieldProps) => (
                 <Textarea
+                  autoFocus
                   placeholder="Why is this job being postponed?"
                   {...register('reason')}
                   {...fieldProps}

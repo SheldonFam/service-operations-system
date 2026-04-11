@@ -1,38 +1,24 @@
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PageLoader } from '@/app/lazy-pages'
 import { StatusBadge } from '../components/StatusBadge'
 import { useOrder } from '../hooks/useOrders'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
-import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, buildTelHref } from '@/lib/utils'
 import { CheckCircle2, PlusCircle, ClipboardList, Phone } from 'lucide-react'
 
 export function OrderSummaryPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { order, loading } = useOrder(id ?? '')
+  const { data: order, isPending } = useOrder(id ?? '')
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
+  if (isPending) return <PageLoader />
 
   if (!order) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-muted-foreground">Order not found</p>
-        <Button variant="link" onClick={() => navigate('/orders')}>
-          Back to orders
-        </Button>
-      </div>
-    )
+    return <NotFoundFallback />
   }
 
   return (
@@ -40,7 +26,7 @@ export function OrderSummaryPage() {
       {/* Success Header */}
       <div className="flex flex-col items-center text-center">
         <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+          <CheckCircle2 aria-hidden="true" className="h-8 w-8 text-green-600" />
         </div>
         <h1 className="text-2xl font-semibold">Order Created!</h1>
         <p className="text-muted-foreground">
@@ -68,8 +54,8 @@ export function OrderSummaryPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Phone</span>
-              <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary">
-                <Phone className="h-3 w-3" />
+              <a href={buildTelHref(order.phone)} className="flex items-center gap-1 text-primary">
+                <Phone aria-hidden="true" className="h-3 w-3" />
                 {order.phone}
               </a>
             </div>
@@ -125,13 +111,13 @@ export function OrderSummaryPage() {
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button className="flex-1 py-3 sm:py-0" size="lg" variant="outline" asChild>
           <Link to="/orders/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle aria-hidden="true" className="mr-2 h-4 w-4" />
             Create Another
           </Link>
         </Button>
         <Button className="flex-1 py-3 sm:py-0" size="lg" asChild>
           <Link to={`/orders/${order.id}`}>
-            <ClipboardList className="mr-2 h-4 w-4" />
+            <ClipboardList aria-hidden="true" className="mr-2 h-4 w-4" />
             View Order Detail
           </Link>
         </Button>

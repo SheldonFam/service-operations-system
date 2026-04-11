@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,7 @@ import {
 import { OrderTable } from '../components/OrderTable'
 import { useOrders } from '../hooks/useOrders'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { ORDER_STATUSES, STATUS_CONFIG } from '@/lib/constants'
 import type { OrderStatus } from '@/lib/types'
 import { PlusCircle, Search } from 'lucide-react'
@@ -22,9 +23,11 @@ export function OrderListPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<OrderStatus | undefined>()
 
-  // Debounce search via useDeferredValue — low-priority update, no extra state
-  const deferredSearch = useDeferredValue(search)
-  const { orders, loading } = useOrders({ status: statusFilter, search: deferredSearch || undefined })
+  // Wait 300 ms after the user stops typing before hitting the API.
+  // Note: useDeferredValue would show stale results instantly (no delay),
+  // but debouncing avoids unnecessary Supabase calls on every keystroke.
+  const debouncedSearch = useDebouncedValue(search, 300)
+  const { data: orders, isPending, error } = useOrders({ status: statusFilter, search: debouncedSearch || undefined })
 
   return (
     <div className="space-y-4">
@@ -32,7 +35,7 @@ export function OrderListPage() {
         <h1 className="text-2xl font-semibold">Orders</h1>
         {role === 'admin' && (
           <Button onClick={() => navigate('/orders/new')}>
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle aria-hidden="true" className="mr-2 h-4 w-4" />
             New Order
           </Button>
         )}
@@ -40,8 +43,11 @@ export function OrderListPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <label htmlFor="order-search" className="sr-only">Search orders</label>
+          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            id="order-search"
+            type="search"
             placeholder="Search by customer or order no..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -54,7 +60,7 @@ export function OrderListPage() {
             setStatusFilter(v === 'all' ? undefined : (v as OrderStatus))
           }
         >
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger aria-label="Filter by status" className="w-full sm:w-[180px]">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -68,7 +74,12 @@ export function OrderListPage() {
         </Select>
       </div>
 
-      <OrderTable orders={orders} loading={loading} />
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          Failed to load orders. Please try again.
+        </p>
+      )}
+      <OrderTable orders={orders ?? []} loading={isPending} />
     </div>
   )
 }

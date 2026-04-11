@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -21,24 +22,25 @@ import { useTechnicians, useUpdateOrder } from '../hooks/useOrders'
 import { assignTechSchema } from '../schemas/order.schema'
 import type { AssignTechFormValues } from '../schemas/order.schema'
 import type { Order } from '@/lib/types'
+import { WhatsAppLinkButton, type WhatsAppLink } from '@/components/WhatsAppLinkButton'
 import { generateWhatsAppUrl, buildAssignmentMessage } from '@/lib/utils'
+import { STATUS_AFTER_ASSIGN } from '@/lib/business-rules'
 import { toast } from 'sonner'
 
 interface AssignTechDialogProps {
   order: Order
   open: boolean
   onClose: () => void
-  onAssigned: () => void
 }
 
 export function AssignTechDialog({
   order,
   open,
   onClose,
-  onAssigned,
 }: AssignTechDialogProps) {
-  const { technicians, loading: techLoading } = useTechnicians()
-  const { updateOrder } = useUpdateOrder()
+  const { data: technicians, isPending: techLoading } = useTechnicians()
+  const updateOrderMutation = useUpdateOrder()
+  const [whatsappLink, setWhatsappLink] = useState<WhatsAppLink | null>(null)
 
   const {
     control,
@@ -54,83 +56,107 @@ export function AssignTechDialog({
 
   const handleClose = () => {
     reset()
+    setWhatsappLink(null)
     onClose()
   }
 
   const onSubmit = async (values: AssignTechFormValues) => {
-    const { error } = await updateOrder(order.id, {
-      assigned_technician: values.technician_id,
-      status: 'assigned',
-      postpone_reason: null,
-    })
-    if (error) {
-      toast.error(error)
+    try {
+      await updateOrderMutation.mutateAsync({
+        id: order.id,
+        updates: {
+          assigned_technician: values.technician_id,
+          status: STATUS_AFTER_ASSIGN,
+          postpone_reason: null,
+        },
+      })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to assign')
       return
     }
-    const tech = technicians.find((t) => t.id === values.technician_id)
+    const tech = technicians?.find((t) => t.id === values.technician_id)
     if (tech?.phone) {
-      const url = generateWhatsAppUrl(
-        tech.phone,
-        buildAssignmentMessage({
-          technicianName: tech.name,
-          orderId: order.order_no,
-          customerName: order.customer_name,
-          address: order.address,
-          serviceType: order.service_type,
-        }),
-      )
-      window.open(url, '_blank')
+      setWhatsappLink({
+        label: `Send to ${tech.name}`,
+        url: generateWhatsAppUrl(
+          tech.phone,
+          buildAssignmentMessage({
+            technicianName: tech.name,
+            orderId: order.order_no,
+            customerName: order.customer_name,
+            address: order.address,
+            serviceType: order.service_type,
+          }),
+        ),
+      })
     }
     toast.success('Technician assigned successfully')
-    reset()
-    onAssigned()
-    onClose()
+    if (!tech?.phone) {
+      handleClose()
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !isSubmitting && handleClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign Technician</DialogTitle>
+          <DialogTitle>{whatsappLink ? 'Technician Assigned' : 'Assign Technician'}</DialogTitle>
           <DialogDescription>
-            Select a technician for order {order.order_no}
+            {whatsappLink
+              ? 'Notify the technician via WhatsApp.'
+              : `Select a technician for order ${order.order_no}`}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <fieldset disabled={isSubmitting} className="space-y-4">
-            <FormField label="Technician" error={errors.technician_id?.message} required>
-              {(fieldProps) => (
-                <Controller
-                  name="technician_id"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={techLoading}>
-                      <SelectTrigger id={fieldProps.id} aria-invalid={fieldProps['aria-invalid']}>
-                        <SelectValue placeholder={techLoading ? 'Loading...' : 'Select a technician'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {technicians.map((tech) => (
-                          <SelectItem key={tech.id} value={tech.id}>
-                            {tech.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              )}
-            </FormField>
 
+        {whatsappLink ? (
+          <div className="space-y-3">
+            <WhatsAppLinkButton label={whatsappLink.label} url={whatsappLink.url} />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Assigning...' : 'Assign'}
-              </Button>
+              <Button type="button" onClick={handleClose}>Done</Button>
             </DialogFooter>
-          </fieldset>
-        </form>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <fieldset disabled={isSubmitting} className="space-y-4">
+              <FormField label="Technician" error={errors.technician_id?.message} required>
+                {(fieldProps) => (
+                  <Controller
+                    name="technician_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange} disabled={techLoading}>
+                        <SelectTrigger
+                          autoFocus
+                          id={fieldProps.id}
+                          aria-invalid={fieldProps['aria-invalid']}
+                          aria-busy={techLoading || undefined}
+                        >
+                          <SelectValue placeholder={techLoading ? 'Loading\u2026' : 'Select a technician'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(technicians ?? []).map((tech) => (
+                            <SelectItem key={tech.id} value={tech.id}>
+                              {tech.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                )}
+              </FormField>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Assigning\u2026' : 'Assign'}
+                </Button>
+              </DialogFooter>
+            </fieldset>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )
