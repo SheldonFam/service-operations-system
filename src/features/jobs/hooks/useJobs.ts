@@ -35,10 +35,12 @@ export function useCompleteJob() {
       if (result.error) throw new Error(result.error)
       return result
     },
-    onSuccess: (_, { orderId }) => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    onSuccess: async (_, { orderId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+      ])
     },
   })
 }
@@ -51,10 +53,12 @@ export function usePostponeJob() {
       if (error) throw new Error(error)
       return { orderId }
     },
-    onSuccess: ({ orderId }) => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    onSuccess: async ({ orderId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+      ])
     },
   })
 }

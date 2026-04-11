@@ -32,10 +32,10 @@ export function JobListPage() {
   const { user } = useAuth()
   const [tab, setTab] = useState<JobTab>('pending')
   const { data, isPending } = useJobs(user?.id ?? '', ALL_TECH_STATUSES)
-  const jobs = data ?? []
 
   // Single pass: bucket each job into its tab and count.
   const { filteredJobs, counts } = useMemo(() => {
+    const jobs = data ?? []
     const counts: Record<JobTab, number> = { pending: 0, in_progress: 0, completed: 0 }
     const filtered: typeof jobs = []
     const activeSet = TAB_STATUS_SETS[tab]
@@ -49,7 +49,7 @@ export function JobListPage() {
       if (activeSet.has(job.status)) filtered.push(job)
     }
     return { filteredJobs: filtered, counts }
-  }, [jobs, tab])
+  }, [data, tab])
 
   return (
     <div className="space-y-4">

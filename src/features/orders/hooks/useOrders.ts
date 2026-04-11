@@ -44,9 +44,9 @@ export function useCreateOrder() {
       if (!data) throw new Error('Create order returned no data')
       return data
     },
-    onSuccess: (order) => {
+    onSuccess: async (order) => {
       queryClient.setQueryData(['order', order.id], order)
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      await queryClient.invalidateQueries({ queryKey: ['orders'] })
     },
   })
 }
@@ -59,10 +59,12 @@ export function useUpdateOrder() {
       if (error) throw new Error(error)
       return { id }
     },
-    onSuccess: ({ id }) => {
-      queryClient.invalidateQueries({ queryKey: ['order', id] })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
-      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    onSuccess: async ({ id }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['order', id] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+      ])
     },
   })
 }
