@@ -23,6 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Always log — in production this is the only signal that a UI crash occurred.
+    // Replace with Sentry/LogRocket when available.
     console.error('ErrorBoundary caught:', error, errorInfo)
   }
 
@@ -40,7 +42,6 @@ export class ErrorBoundary extends Component<Props, State> {
           </p>
           <Button
             onClick={() => {
-              this.setState({ hasError: false, error: null })
               window.location.reload()
             }}
           >
