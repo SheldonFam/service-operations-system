@@ -1,21 +1,48 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { supabase } from "./supabase";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-MY", {
+/** Extract up to 2 initials from a display name. */
+export function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+/**
+ * Map a raw Supabase auth error to a user-friendly message.
+ * Generic enough to avoid leaking whether an email exists.
+ */
+export function mapSignInError(error: string): string {
+  if (/invalid|credential|email|password/i.test(error)) {
+    return 'Invalid email or password.'
+  }
+  return 'Sign-in failed. Please try again.'
+}
+
+export function formatDate(date: string | null | undefined): string {
+  if (!date) return '—'
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString("en-MY", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 }
 
-export function formatDateTime(date: string): string {
-  return new Date(date).toLocaleDateString("en-MY", {
+export function formatDateTime(date: string | null | undefined): string {
+  if (!date) return '—'
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString("en-MY", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -25,21 +52,13 @@ export function formatDateTime(date: string): string {
 }
 
 export function formatCurrency(amount: number): string {
+  if (!Number.isFinite(amount)) return 'RM 0.00'
   return `RM ${amount.toFixed(2)}`;
 }
 
-export async function generateOrderNo(): Promise<string> {
-  const { data, error } = await supabase.rpc("generate_order_no");
-  if (error) throw new Error(`Failed to generate order number: ${error.message}`);
-  return data as string;
-}
-
-export function getPhotoUrl(fileUrl: string): string {
-  // If already a full URL, return as-is
-  if (fileUrl.startsWith('http')) return fileUrl;
-  // Otherwise it's a storage path — resolve via Supabase public URL
-  const { data } = supabase.storage.from('service-photos').getPublicUrl(fileUrl);
-  return data.publicUrl;
+export function buildTelHref(phone: string): string {
+  const normalized = phone.replace(/\s/g, '')
+  return normalized ? `tel:${normalized}` : ''
 }
 
 export function generateWhatsAppUrl(
@@ -53,6 +72,7 @@ export function generateWhatsAppUrl(
   } else if (normalized.startsWith("+")) {
     normalized = normalized.slice(1);
   }
+  if (!normalized) return ''
   const encoded = encodeURIComponent(message);
   return `https://wa.me/${normalized}?text=${encoded}`;
 }
