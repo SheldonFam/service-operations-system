@@ -7,6 +7,7 @@ export interface AuthState {
   user: User | null;
   role: UserRole | null;
   loading: boolean;
+  profileError: string | null;
   signIn: (
     email: string,
     password: string,
