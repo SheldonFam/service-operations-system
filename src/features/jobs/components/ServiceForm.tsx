@@ -77,7 +77,7 @@ function buildNotifications(
 export function ServiceForm({ order }: ServiceFormProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { completeJob } = useCompleteJob()
+  const completeJobMutation = useCompleteJob()
   const { uploadFiles, uploading, progress } = useUpload()
   // Prefetch managers when the form mounts so the success path doesn't add
   // a sequential round-trip after upload finishes.
@@ -116,23 +116,29 @@ export function ServiceForm({ order }: ServiceFormProps) {
     if (!user) return
 
     const now = new Date().toISOString()
-    const { serviceRecordId, error } = await completeJob(order.id, user.id, {
-      work_done: values.work_done,
-      extra_charges: values.extra_charges,
-      final_amount: order.quoted_price + values.extra_charges,
-      completed_at: now,
-      remarks: values.remarks,
-      payment_amount: order.quoted_price + values.extra_charges,
-      payment_method: values.payment_method,
-    })
-
-    if (error) {
-      toast.error(error)
+    let serviceRecordId: string | null = null
+    try {
+      const result = await completeJobMutation.mutateAsync({
+        orderId: order.id,
+        technicianId: user.id,
+        data: {
+          work_done: values.work_done,
+          extra_charges: values.extra_charges,
+          final_amount: order.quoted_price + values.extra_charges,
+          completed_at: now,
+          remarks: values.remarks,
+          payment_amount: order.quoted_price + values.extra_charges,
+          payment_method: values.payment_method,
+        },
+      })
+      serviceRecordId = result.serviceRecordId
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to complete job')
       return
     }
 
     if (serviceRecordId && files.length > 0) {
-      const { error: uploadError } = await uploadFiles(serviceRecordId, files)
+      const { error: uploadError } = await uploadFiles({ serviceRecordId, files })
       if (uploadError) {
         // Photos failed but the service record + status update already
         // succeeded. Reverting the order status here would leave the service

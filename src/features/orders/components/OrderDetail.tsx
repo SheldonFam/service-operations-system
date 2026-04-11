@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -9,7 +10,9 @@ import { Separator } from '@/components/ui/separator'
 import { StatusTimeline } from './StatusTimeline'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
 import type { Order } from '@/lib/types'
-import { formatCurrency, formatDateTime, cn, getPhotoUrl } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, buildTelHref } from '@/lib/utils'
+import { useSignedPhotoUrls } from '@/features/jobs/hooks/useSignedPhotoUrls'
+import { InlineError } from '@/components/InlineError'
 import {
   User,
   Phone,
@@ -26,6 +29,13 @@ interface OrderDetailProps {
 }
 
 export function OrderDetail({ order }: OrderDetailProps) {
+  const photoPaths = useMemo(
+    () => order.service_record?.photos?.map((p) => p.file_url) ?? [],
+    [order.service_record?.photos],
+  )
+  const { data: signedUrls, error: signedUrlsError, refetch: retrySignedUrls } =
+    useSignedPhotoUrls(photoPaths)
+
   return (
     <div className="space-y-6">
       {/* Status Timeline */}
@@ -45,17 +55,17 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span>{order.customer_name}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <a href={`tel:${order.phone}`} className="text-primary underline">
+              <Phone aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <a href={buildTelHref(order.phone)} className="text-primary underline">
                 {order.phone}
               </a>
             </div>
             <div className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
               <span>{order.address}</span>
             </div>
           </CardContent>
@@ -68,11 +78,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span>{order.problem_description}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-muted-foreground" />
+              <Wrench aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <Badge
                 variant="secondary"
                 className={cn(SERVICE_TYPE_COLORS[order.service_type])}
@@ -81,13 +91,13 @@ export function OrderDetail({ order }: OrderDetailProps) {
               </Badge>
             </div>
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
                 {formatCurrency(order.quoted_price)}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span>
                 {order.technician?.name ?? (
                   <span className="text-muted-foreground">Unassigned</span>
@@ -95,7 +105,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
                 {formatDateTime(order.created_at)}
               </span>
@@ -112,7 +122,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-2">
-              <MessageSquare className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <MessageSquare aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
               <span>{order.admin_notes}</span>
             </div>
           </CardContent>
@@ -182,28 +192,44 @@ export function OrderDetail({ order }: OrderDetailProps) {
                     <p className="mb-2 text-sm text-muted-foreground">
                       Service Photos
                     </p>
+                    {signedUrlsError && (
+                      <InlineError
+                        message={`Couldn't load photo previews. ${signedUrlsError}`}
+                        onRetry={retrySignedUrls}
+                        className="mb-2"
+                      />
+                    )}
                     <div className="grid grid-cols-3 gap-2">
-                      {order.service_record.photos.map((photo) => (
-                        <a
-                          key={photo.id}
-                          href={getPhotoUrl(photo.file_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="overflow-hidden rounded-md border"
-                        >
-                          {photo.file_type === 'image' ? (
-                            <img
-                              src={getPhotoUrl(photo.file_url)}
-                              alt="Service photo"
-                              className="aspect-square object-cover"
-                            />
-                          ) : (
-                            <div className="flex aspect-square items-center justify-center bg-muted text-xs text-muted-foreground">
-                              {photo.file_type.toUpperCase()}
-                            </div>
-                          )}
-                        </a>
-                      ))}
+                      {order.service_record.photos.map((photo) => {
+                        const url = signedUrls?.[photo.file_url]
+                        return (
+                          <a
+                            key={photo.id}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="overflow-hidden rounded-md border"
+                            aria-disabled={!url || undefined}
+                            onClick={(e) => {
+                              if (!url) e.preventDefault()
+                            }}
+                          >
+                            {photo.file_type === 'image' && url ? (
+                              <img
+                                src={url}
+                                alt="Service photo"
+                                loading="lazy"
+                                decoding="async"
+                                className="aspect-square w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex aspect-square items-center justify-center bg-muted text-xs text-muted-foreground">
+                                {photo.file_type.toUpperCase()}
+                              </div>
+                            )}
+                          </a>
+                        )
+                      })}
                     </div>
                   </div>
                 </>

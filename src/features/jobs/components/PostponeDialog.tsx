@@ -28,7 +28,7 @@ export function PostponeDialog({
   open,
   onClose,
 }: PostponeDialogProps) {
-  const { postponeJob } = usePostponeJob()
+  const postponeJobMutation = usePostponeJob()
 
   const {
     register,
@@ -46,9 +46,10 @@ export function PostponeDialog({
   }
 
   const onSubmit = async (values: PostponeFormValues) => {
-    const { error } = await postponeJob(order.id, values.reason)
-    if (error) {
-      toast.error(error)
+    try {
+      await postponeJobMutation.mutateAsync({ orderId: order.id, reason: values.reason })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to postpone')
       return
     }
     toast.success('Job postponed')

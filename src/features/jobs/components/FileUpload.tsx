@@ -1,34 +1,14 @@
-import { useRef, useCallback, useSyncExternalStore } from 'react'
+import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { ImagePlus, X, FileText, Film } from 'lucide-react'
-
-const MAX_FILES = 6
-const ACCEPTED_TYPES = 'image/*,video/*,application/pdf'
+import { ACCEPTED_UPLOAD_MIME, MAX_FILES } from '@/lib/constants'
+import { validateUploadFile } from '@/lib/files'
+import { useObjectUrl } from '@/hooks/use-object-url'
+import { toast } from 'sonner'
 
 interface FileUploadProps {
   files: File[]
   onFilesChange: (files: File[]) => void
-}
-
-function useObjectUrl(file: File) {
-  const urlRef = useRef<string | null>(null)
-
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      urlRef.current = URL.createObjectURL(file)
-      onStoreChange()
-      return () => {
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current)
-          urlRef.current = null
-        }
-      }
-    },
-    [file],
-  )
-  const getSnapshot = useCallback(() => urlRef.current ?? '', [])
-
-  return useSyncExternalStore(subscribe, getSnapshot)
 }
 
 function FilePreview({ file }: { file: File }) {
@@ -40,13 +20,13 @@ function FilePreview({ file }: { file: File }) {
   if (file.type.startsWith('video')) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted">
-        <Film className="h-6 w-6 text-muted-foreground" />
+        <Film aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
       </div>
     )
   }
   return (
     <div className="flex h-full w-full items-center justify-center bg-muted">
-      <FileText className="h-6 w-6 text-muted-foreground" />
+      <FileText aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
     </div>
   )
 }
@@ -57,8 +37,29 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
   const handleAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? [])
     const remaining = MAX_FILES - files.length
-    const toAdd = selected.slice(0, remaining)
-    onFilesChange([...files, ...toAdd])
+
+    const accepted: File[] = []
+    let skipped = 0
+    for (const file of selected) {
+      if (accepted.length >= remaining) {
+        skipped += 1
+        continue
+      }
+      const result = validateUploadFile(file)
+      if (!result.ok) {
+        toast.error(result.reason)
+        continue
+      }
+      accepted.push(file)
+    }
+
+    if (skipped > 0) {
+      toast.info(`${skipped} file${skipped > 1 ? 's' : ''} skipped — max ${MAX_FILES} files allowed.`)
+    }
+
+    if (accepted.length > 0) {
+      onFilesChange([...files, ...accepted])
+    }
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -76,9 +77,9 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
               type="button"
               aria-label={`Remove ${file.name}`}
               onClick={() => handleRemove(index)}
-              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+              className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="h-3 w-3" />
+              <X aria-hidden="true" className="h-4 w-4" />
             </button>
             <p className="absolute bottom-0 left-0 right-0 truncate bg-black/50 px-1 text-[10px] text-white">
               {file.name}
@@ -89,9 +90,16 @@ export function FileUpload({ files, onFilesChange }: FileUploadProps) {
 
       {files.length < MAX_FILES && (
         <div>
-          <input ref={inputRef} type="file" accept={ACCEPTED_TYPES} multiple onChange={handleAdd} className="hidden" />
+          <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED_UPLOAD_MIME}
+            multiple
+            onChange={handleAdd}
+            className="hidden"
+          />
           <Button type="button" variant="outline" className="w-full" onClick={() => inputRef.current?.click()}>
-            <ImagePlus className="mr-2 h-4 w-4" />
+            <ImagePlus aria-hidden="true" className="mr-2 h-4 w-4" />
             Add Photos ({files.length}/{MAX_FILES})
           </Button>
         </div>
