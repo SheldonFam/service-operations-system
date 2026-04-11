@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/sidebar'
 import { LayoutDashboard, ClipboardList, PlusCircle } from 'lucide-react'
 
+const APP_VERSION = __APP_VERSION__
+
 export function AdminSidebar() {
   const { role } = useAuth()
 
@@ -31,7 +33,7 @@ export function AdminSidebar() {
                       isActive ? 'bg-sidebar-accent' : ''
                     }
                   >
-                    <LayoutDashboard className="h-4 w-4" />
+                    <LayoutDashboard aria-hidden="true" className="h-4 w-4" />
                     <span>Dashboard</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -46,7 +48,7 @@ export function AdminSidebar() {
                     isActive ? 'bg-sidebar-accent' : ''
                   }
                 >
-                  <ClipboardList className="h-4 w-4" />
+                  <ClipboardList aria-hidden="true" className="h-4 w-4" />
                   <span>Orders</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -60,7 +62,7 @@ export function AdminSidebar() {
                       isActive ? 'bg-sidebar-accent' : ''
                     }
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <PlusCircle aria-hidden="true" className="h-4 w-4" />
                     <span>New Order</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -71,7 +73,7 @@ export function AdminSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <p className="px-4 pb-2 text-xs text-muted-foreground">
-          Sejuk Sejuk Service v1.0
+          Sejuk Sejuk Service v{APP_VERSION}
         </p>
       </SidebarFooter>
     </Sidebar>
