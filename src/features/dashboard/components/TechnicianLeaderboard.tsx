@@ -1,6 +1,7 @@
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -40,15 +41,19 @@ export function TechnicianLeaderboard({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
+            <TableCaption className="sr-only">
+              Technician performance ranking by jobs completed and revenue.
+              Revenue column is hidden on small screens.
+            </TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12 text-center">#</TableHead>
-                <TableHead>Technician</TableHead>
-                <TableHead className="text-right">Jobs</TableHead>
-                <TableHead className="hidden text-right sm:table-cell">
+                <TableHead scope="col" className="w-12 text-center">#</TableHead>
+                <TableHead scope="col">Technician</TableHead>
+                <TableHead scope="col" className="text-right">Jobs</TableHead>
+                <TableHead scope="col" className="hidden text-right sm:table-cell">
                   Revenue
                 </TableHead>
-                <TableHead className="text-right">Postponed</TableHead>
+                <TableHead scope="col" className="text-right">Postponed</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
