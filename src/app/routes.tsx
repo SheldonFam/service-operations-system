@@ -1,9 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
+import { NotFoundPage } from './NotFoundPage'
 import {
   LoginPage,
-  OrdersPage,
+  OrdersDispatcher,
   OrderCreatePage,
   OrderDetailPage,
   OrderSummaryPage,
@@ -40,7 +41,7 @@ export const router = createBrowserRouter([
         path: 'orders',
         element: (
           <SuspenseWrapper>
-            <OrdersPage />
+            <OrdersDispatcher />
           </SuspenseWrapper>
         ),
       },
@@ -81,6 +82,10 @@ export const router = createBrowserRouter([
             </SuspenseWrapper>
           </ProtectedRoute>
         ),
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },
