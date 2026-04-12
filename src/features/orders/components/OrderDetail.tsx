@@ -1,39 +1,31 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useMemo } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { StatusTimeline } from './StatusTimeline'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
 import type { Order } from '@/lib/types'
-import { formatCurrency, formatDateTime, cn, getPhotoUrl } from '@/lib/utils'
-import {
-  User,
-  Phone,
-  MapPin,
-  FileText,
-  Wrench,
-  DollarSign,
-  Clock,
-  MessageSquare,
-} from 'lucide-react'
+import { formatCurrency, formatDateTime, cn, buildTelHref } from '@/lib/utils'
+import { useSignedPhotoUrls } from '@/features/jobs/hooks/useSignedPhotoUrls'
+import { InlineError } from '@/components/InlineError'
+import { User, Phone, MapPin, FileText, Wrench, DollarSign, Clock, MessageSquare } from 'lucide-react'
 
 interface OrderDetailProps {
   order: Order
 }
 
 export function OrderDetail({ order }: OrderDetailProps) {
+  const photoPaths = useMemo(
+    () => order.service_record?.photos?.map((p) => p.file_url) ?? [],
+    [order.service_record?.photos],
+  )
+  const { data: signedUrls, error: signedUrlsError, refetch: retrySignedUrls } = useSignedPhotoUrls(photoPaths)
+
   return (
     <div className="space-y-6">
       {/* Status Timeline */}
       <Card className="p-3 sm:p-4">
-        <StatusTimeline
-          currentStatus={order.status}
-          postponeCount={order.postpone_count}
-        />
+        <StatusTimeline currentStatus={order.status} postponeCount={order.postpone_count} />
       </Card>
 
       {/* Order Info */}
@@ -45,17 +37,17 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span>{order.customer_name}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <a href={`tel:${order.phone}`} className="text-primary underline">
+              <Phone aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <a href={buildTelHref(order.phone)} className="text-primary underline">
                 {order.phone}
               </a>
             </div>
             <div className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
               <span>{order.address}</span>
             </div>
           </CardContent>
@@ -68,37 +60,26 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
               <span>{order.problem_description}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-              <Badge
-                variant="secondary"
-                className={cn(SERVICE_TYPE_COLORS[order.service_type])}
-              >
+              <Wrench aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="secondary" className={cn(SERVICE_TYPE_COLORS[order.service_type])}>
                 {order.service_type}
               </Badge>
             </div>
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">
-                {formatCurrency(order.quoted_price)}
-              </span>
+              <DollarSign aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{formatCurrency(order.quoted_price)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {order.technician?.name ?? (
-                  <span className="text-muted-foreground">Unassigned</span>
-                )}
-              </span>
+              <User aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <span>{order.technician?.name ?? <span className="text-muted-foreground">Unassigned</span>}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {formatDateTime(order.created_at)}
-              </span>
+              <Clock aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{formatDateTime(order.created_at)}</span>
             </div>
           </CardContent>
         </Card>
@@ -112,7 +93,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-2">
-              <MessageSquare className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <MessageSquare aria-hidden="true" className="mt-0.5 h-4 w-4 text-muted-foreground" />
               <span>{order.admin_notes}</span>
             </div>
           </CardContent>
@@ -123,9 +104,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
       {order.postpone_reason && (
         <Card className="border-orange-200">
           <CardHeader>
-            <CardTitle className="text-base text-orange-700">
-              Postpone Reason
-            </CardTitle>
+            <CardTitle className="text-base text-orange-700">Postpone Reason</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{order.postpone_reason}</p>
@@ -148,15 +127,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-sm text-muted-foreground">Quoted Price</p>
-                <p className="font-medium">
-                  {formatCurrency(order.quoted_price)}
-                </p>
+                <p className="font-medium">{formatCurrency(order.quoted_price)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Extra Charges</p>
-                <p className="font-medium">
-                  {formatCurrency(order.service_record.extra_charges)}
-                </p>
+                <p className="font-medium">{formatCurrency(order.service_record.extra_charges)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Final Amount</p>
@@ -174,28 +149,40 @@ export function OrderDetail({ order }: OrderDetailProps) {
                 </div>
               </>
             )}
-            {order.service_record.photos &&
-              order.service_record.photos.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Service Photos
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {order.service_record.photos.map((photo) => (
+            {order.service_record.photos && order.service_record.photos.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <p className="mb-2 text-sm text-muted-foreground">Service Photos</p>
+                  {signedUrlsError && (
+                    <InlineError
+                      message={`Couldn't load photo previews. ${signedUrlsError}`}
+                      onRetry={retrySignedUrls}
+                      className="mb-2"
+                    />
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
+                    {order.service_record.photos.map((photo) => {
+                      const url = signedUrls?.[photo.file_url]
+                      return (
                         <a
                           key={photo.id}
-                          href={getPhotoUrl(photo.file_url)}
+                          href={url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="overflow-hidden rounded-md border"
+                          aria-disabled={!url || undefined}
+                          onClick={(e) => {
+                            if (!url) e.preventDefault()
+                          }}
                         >
-                          {photo.file_type === 'image' ? (
+                          {photo.file_type === 'image' && url ? (
                             <img
-                              src={getPhotoUrl(photo.file_url)}
+                              src={url}
                               alt="Service photo"
-                              className="aspect-square object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              className="aspect-square w-full object-cover"
                             />
                           ) : (
                             <div className="flex aspect-square items-center justify-center bg-muted text-xs text-muted-foreground">
@@ -203,11 +190,12 @@ export function OrderDetail({ order }: OrderDetailProps) {
                             </div>
                           )}
                         </a>
-                      ))}
-                    </div>
+                      )
+                    })}
                   </div>
-                </>
-              )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

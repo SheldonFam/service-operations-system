@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
@@ -13,21 +12,46 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useCreateOrder, useTechnicians } from '../hooks/useOrders'
 import { orderSchema } from '../schemas/order.schema'
 import type { OrderFormValues } from '../schemas/order.schema'
+import type { User } from '@/lib/types'
+import { InlineError } from '@/components/InlineError'
 import { toast } from 'sonner'
 
 export function OrderForm() {
+  const { data: technicians, isPending: techLoading, error: techError } = useTechnicians()
+
+  if (techLoading) {
+    return (
+      <div className="space-y-6" role="status" aria-busy="true" aria-label="Loading form">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
+    )
+  }
+
+  if (techError || !technicians) {
+    return (
+      <InlineError
+        message="Failed to load technician list. Please try again."
+        onRetry={() => window.location.reload()}
+      />
+    )
+  }
+
+  // Render the form only after technicians are loaded so `defaultValues`
+  // can use the first technician. This avoids the empty dropdown flash.
+  return <OrderFormInner technicians={technicians} />
+}
+
+function OrderFormInner({ technicians }: { technicians: User[] }) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { createOrder } = useCreateOrder()
-  const { technicians, loading: techLoading } = useTechnicians()
-
-  const firstTechId = technicians[0]?.id
+  const createOrderMutation = useCreateOrder()
 
   const {
     register,
     handleSubmit,
     control,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -39,32 +63,27 @@ export function OrderForm() {
       problem_description: '',
       service_type: 'Cleaning',
       quoted_price: NaN,
-      assigned_technician: undefined,
+      assigned_technician: technicians[0]?.id ?? '',
       admin_notes: '',
     },
   })
 
-  useEffect(() => {
-    if (firstTechId) {
-      setValue('assigned_technician', firstTechId)
-    }
-  }, [firstTechId, setValue])
-
   const onSubmit = async (values: OrderFormValues) => {
-    if (!user) return
-    const { data, error } = await createOrder(values, user.id)
-    if (error) {
-      toast.error(error)
+    if (!user) {
+      toast.error('Session expired. Please sign in again.')
       return
     }
-    if (data) {
-      toast.success(`Order ${data.order_no} created successfully`)
-      navigate(`/orders/${data.id}/summary`)
+    try {
+      const order = await createOrderMutation.mutateAsync({ values, createdBy: user.id })
+      toast.success(`Order ${order.order_no} created successfully`)
+      void navigate(`/orders/${order.id}/summary`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to create order')
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <fieldset disabled={isSubmitting} className="space-y-6">
         {/* Customer Information */}
         <div className="space-y-4">
@@ -72,12 +91,7 @@ export function OrderForm() {
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Customer Name" error={errors.customer_name?.message} required>
               {(fieldProps) => (
-                <Input
-                  placeholder="e.g. Ahmad"
-                  autoComplete="name"
-                  {...register('customer_name')}
-                  {...fieldProps}
-                />
+                <Input placeholder="e.g. Ahmad" autoComplete="name" {...register('customer_name')} {...fieldProps} />
               )}
             </FormField>
 
@@ -95,7 +109,14 @@ export function OrderForm() {
           </div>
 
           <FormField label="Address" error={errors.address?.message} required>
-            {(fieldProps) => <Textarea placeholder="Full address" {...register('address')} {...fieldProps} />}
+            {(fieldProps) => (
+              <Textarea
+                placeholder="Full address"
+                autoComplete="street-address"
+                {...register('address')}
+                {...fieldProps}
+              />
+            )}
           </FormField>
         </div>
 
@@ -158,9 +179,9 @@ export function OrderForm() {
                   name="assigned_technician"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={techLoading}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id={fieldProps.id}>
-                        <SelectValue placeholder={techLoading ? 'Loading...' : ''} />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {technicians.map((tech) => (
@@ -187,7 +208,7 @@ export function OrderForm() {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create Order'}
+            {isSubmitting ? 'Creating\u2026' : 'Create Order'}
           </Button>
         </div>
       </fieldset>

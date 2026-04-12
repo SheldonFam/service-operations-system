@@ -1,21 +1,19 @@
-import { useNavigate } from 'react-router-dom'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Link } from 'react-router-dom'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from './StatusBadge'
-import type { Order } from '@/lib/types'
+import type { OrderListRow } from '@/lib/supabase-queries'
 import { formatDate, formatCurrency } from '@/lib/utils'
 
 interface OrderTableProps {
-  orders: Order[]
+  orders: OrderListRow[]
   loading: boolean
 }
 
 export function OrderTable({ orders, loading }: OrderTableProps) {
-  const navigate = useNavigate()
-
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3" role="status" aria-busy="true" aria-label="Loading orders">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-12 w-full" />
         ))}
@@ -28,51 +26,65 @@ export function OrderTable({ orders, loading }: OrderTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="whitespace-nowrap">Order No</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead className="hidden sm:table-cell">Service</TableHead>
-            <TableHead className="hidden md:table-cell">Technician</TableHead>
-            <TableHead className="hidden sm:table-cell">Price</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow
-              key={order.id}
-              tabIndex={0}
-              aria-label={`Order ${order.order_no} — ${order.customer_name}`}
-              className="cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => navigate(`/orders/${order.id}`)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  navigate(`/orders/${order.id}`)
-                }
-              }}
-            >
-              <TableCell className="whitespace-nowrap font-medium">{order.order_no}</TableCell>
-              <TableCell>{order.customer_name}</TableCell>
-              <TableCell className="hidden sm:table-cell">{order.service_type}</TableCell>
-              <TableCell className="hidden md:table-cell">
-                {order.technician?.name ?? <span className="text-muted-foreground">Unassigned</span>}
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">{formatCurrency(order.quoted_price)}</TableCell>
-              <TableCell>
-                <StatusBadge status={order.status} />
-              </TableCell>
-              <TableCell className="hidden md:table-cell text-muted-foreground">
-                {formatDate(order.created_at)}
-              </TableCell>
+    <div className="space-y-2">
+      <div className="overflow-x-auto rounded-md border">
+        <Table>
+          <TableCaption className="sr-only">List of orders. Open an order by activating its order number.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col" className="whitespace-nowrap">
+                Order No
+              </TableHead>
+              <TableHead scope="col">Customer</TableHead>
+              <TableHead scope="col" className="hidden sm:table-cell">
+                Service
+              </TableHead>
+              <TableHead scope="col" className="hidden md:table-cell">
+                Technician
+              </TableHead>
+              <TableHead scope="col" className="hidden sm:table-cell">
+                Price
+              </TableHead>
+              <TableHead scope="col">Status</TableHead>
+              <TableHead scope="col" className="hidden md:table-cell">
+                Date
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id} className="group relative cursor-pointer transition-colors hover:bg-muted/50">
+                <TableCell className="whitespace-nowrap font-medium">
+                  <Link
+                    to={`/orders/${order.id}`}
+                    aria-label={`Order ${order.order_no} — ${order.customer_name}`}
+                    className="text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm after:absolute after:inset-0 after:content-['']"
+                  >
+                    {order.order_no}
+                  </Link>
+                </TableCell>
+                <TableCell>{order.customer_name}</TableCell>
+                <TableCell className="hidden sm:table-cell">{order.service_type}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {order.technician?.name ?? <span className="text-muted-foreground">Unassigned</span>}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">{formatCurrency(order.quoted_price)}</TableCell>
+                <TableCell>
+                  <StatusBadge status={order.status} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground">
+                  {formatDate(order.created_at)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {orders.length >= 100 && (
+        <p className="text-center text-xs text-muted-foreground">
+          Showing up to 100 orders. Use search or filters to find specific orders.
+        </p>
+      )}
     </div>
   )
 }

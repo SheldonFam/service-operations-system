@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useQuery } from '@tanstack/react-query'
+import { listOrdersForDashboard, type DashboardOrderRow } from '@/lib/supabase-queries'
+import { isCompleted, isPendingReview } from '@/lib/business-rules'
+import { getDateFilter, type DateRange } from '@/lib/date-window'
 
-export type DateRange = 'week' | 'month' | 'all'
+export type { DateRange } from '@/lib/date-window'
 
 export interface TechnicianKPI {
   id: string
@@ -18,134 +20,75 @@ export interface DashboardSummary {
   total_revenue: number
 }
 
-interface RawOrder {
-  id: string
-  status: string
-  quoted_price: number
-  assigned_technician: string | null
-  postpone_count: number
-  created_at: string
-  technician: { id: string; name: string } | null
-  service_record: { final_amount: number }[] | null
+export interface DashboardData {
+  summary: DashboardSummary
+  technicians: TechnicianKPI[]
 }
 
-function getDateFilter(range: DateRange): string | null {
-  if (range === 'all') return null
-  const now = new Date()
-  if (range === 'week') {
-    const start = new Date(now)
-    start.setDate(now.getDate() - 7)
-    return start.toISOString()
+function aggregate(orders: DashboardOrderRow[]): DashboardData {
+  let completedJobs = 0
+  let pendingReview = 0
+  let totalRevenue = 0
+
+  const techMap = new Map<string, { name: string; jobs: number; amount: number; postpones: number }>()
+
+  for (const order of orders) {
+    const completed = isCompleted(order.status)
+    const records = order.service_record
+    const recordAmount = records && records.length > 0 ? records[0].final_amount : 0
+
+    if (completed) {
+      completedJobs += 1
+      totalRevenue += recordAmount
+    }
+    if (isPendingReview(order.status)) pendingReview += 1
+
+    if (!order.technician) continue
+    const techId = order.technician.id
+    const existing = techMap.get(techId) ?? {
+      name: order.technician.name,
+      jobs: 0,
+      amount: 0,
+      postpones: 0,
+    }
+    if (completed) {
+      existing.jobs += 1
+      existing.amount += recordAmount
+    }
+    existing.postpones += order.postpone_count
+    techMap.set(techId, existing)
   }
-  // month
-  const start = new Date(now)
-  start.setDate(now.getDate() - 30)
-  return start.toISOString()
+
+  const technicians: TechnicianKPI[] = Array.from(techMap.entries())
+    .map(([id, data]) => ({
+      id,
+      name: data.name,
+      jobs_completed: data.jobs,
+      total_amount: data.amount,
+      postpone_count: data.postpones,
+    }))
+    .sort((a, b) => b.jobs_completed - a.jobs_completed)
+
+  return {
+    summary: {
+      total_orders: orders.length,
+      completed_jobs: completedJobs,
+      pending_review: pendingReview,
+      total_revenue: totalRevenue,
+    },
+    technicians,
+  }
 }
 
 export function useDashboard(range: DateRange) {
-  const [technicians, setTechnicians] = useState<TechnicianKPI[]>([])
-  const [summary, setSummary] = useState<DashboardSummary>({
-    total_orders: 0,
-    completed_jobs: 0,
-    pending_review: 0,
-    total_revenue: 0,
+  return useQuery({
+    queryKey: ['dashboard', range],
+    queryFn: async ({ signal }) => {
+      const { data, error } = await listOrdersForDashboard(getDateFilter(range), signal)
+      if (error) throw new Error(error)
+      return data ?? []
+    },
+    select: aggregate,
+    staleTime: 60_000,
   })
-  const [loading, setLoading] = useState(true)
-  const fetchIdRef = useRef(0)
-
-  useEffect(() => {
-    const id = ++fetchIdRef.current
-
-    async function fetchData() {
-      let query = supabase
-        .from('orders')
-        .select(
-          '*, technician:users!assigned_technician(id, name), service_record:service_records(final_amount)',
-        )
-
-      const dateFilter = getDateFilter(range)
-      if (dateFilter) {
-        query = query.gte('created_at', dateFilter)
-      }
-
-      const { data, error: queryError } = await query
-
-      if (fetchIdRef.current !== id) return
-
-      if (queryError) {
-        setLoading(false)
-        return
-      }
-
-      const orders = (data ?? []) as unknown as RawOrder[]
-
-      // Summary
-      const totalOrders = orders.length
-      const completedJobs = orders.filter((o) =>
-        ['job_done', 'reviewed', 'closed'].includes(o.status),
-      ).length
-      const pendingReview = orders.filter(
-        (o) => o.status === 'job_done',
-      ).length
-      const totalRevenue = orders.reduce((sum, o) => {
-        const records = o.service_record
-        if (records && records.length > 0) {
-          return sum + records[0].final_amount
-        }
-        return sum
-      }, 0)
-
-      setSummary({
-        total_orders: totalOrders,
-        completed_jobs: completedJobs,
-        pending_review: pendingReview,
-        total_revenue: totalRevenue,
-      })
-
-      // Per-technician aggregation
-      const techMap = new Map<
-        string,
-        { name: string; jobs: number; amount: number; postpones: number }
-      >()
-
-      for (const order of orders) {
-        if (!order.technician) continue
-        const techId = order.technician.id
-        const existing = techMap.get(techId) ?? {
-          name: order.technician.name,
-          jobs: 0,
-          amount: 0,
-          postpones: 0,
-        }
-
-        if (['job_done', 'reviewed', 'closed'].includes(order.status)) {
-          existing.jobs += 1
-          const records = order.service_record
-          if (records && records.length > 0) {
-            existing.amount += records[0].final_amount
-          }
-        }
-        existing.postpones += order.postpone_count
-        techMap.set(techId, existing)
-      }
-
-      const techKPIs: TechnicianKPI[] = Array.from(techMap.entries())
-        .map(([id, data]) => ({
-          id,
-          name: data.name,
-          jobs_completed: data.jobs,
-          total_amount: data.amount,
-          postpone_count: data.postpones,
-        }))
-        .sort((a, b) => b.jobs_completed - a.jobs_completed)
-
-      setTechnicians(techKPIs)
-      setLoading(false)
-    }
-
-    fetchData()
-  }, [range])
-
-  return { technicians, summary, loading }
 }

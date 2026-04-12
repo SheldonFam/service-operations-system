@@ -21,16 +21,10 @@ interface PostponeDialogProps {
   order: Order
   open: boolean
   onClose: () => void
-  onPostponed: () => void
 }
 
-export function PostponeDialog({
-  order,
-  open,
-  onClose,
-  onPostponed,
-}: PostponeDialogProps) {
-  const { postponeJob } = usePostponeJob()
+export function PostponeDialog({ order, open, onClose }: PostponeDialogProps) {
+  const postponeJobMutation = usePostponeJob()
 
   const {
     register,
@@ -48,31 +42,30 @@ export function PostponeDialog({
   }
 
   const onSubmit = async (values: PostponeFormValues) => {
-    const { error } = await postponeJob(order.id, values.reason)
-    if (error) {
-      toast.error(error)
+    try {
+      await postponeJobMutation.mutateAsync({ orderId: order.id, reason: values.reason })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to postpone')
       return
     }
     toast.success('Job postponed')
     reset()
-    onPostponed()
     onClose()
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && !isSubmitting && handleClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Postpone Job</DialogTitle>
-          <DialogDescription>
-            Provide a reason for postponing {order.order_no}
-          </DialogDescription>
+          <DialogDescription>Provide a reason for postponing {order.order_no}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <fieldset disabled={isSubmitting} className="space-y-4">
             <FormField label="Reason" error={errors.reason?.message} required>
               {(fieldProps) => (
                 <Textarea
+                  autoFocus
                   placeholder="Why is this job being postponed?"
                   {...register('reason')}
                   {...fieldProps}

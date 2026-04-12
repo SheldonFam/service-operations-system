@@ -1,51 +1,23 @@
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-
-function getFileType(file: File): 'image' | 'video' | 'pdf' {
-  if (file.type.startsWith('image')) return 'image'
-  if (file.type.startsWith('video')) return 'video'
-  return 'pdf'
-}
+import { useMutation } from '@tanstack/react-query'
+import { uploadServicePhotos } from '@/lib/supabase-queries'
+import { compressImages } from '@/lib/compress-image'
 
 export function useUpload() {
-  const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
 
-  const uploadFiles = async (serviceRecordId: string, files: File[]) => {
-    if (files.length === 0) return { urls: [], error: null }
+  const mutation = useMutation({
+    mutationFn: async ({ serviceRecordId, files }: { serviceRecordId: string; files: File[] }) => {
+      setProgress(0)
+      if (files.length === 0) return { urls: [] as string[], error: null }
+      const compressed = await compressImages(files)
+      return uploadServicePhotos(serviceRecordId, compressed, { onProgress: setProgress })
+    },
+  })
 
-    setUploading(true)
-    setProgress(0)
-    const urls: string[] = []
-    const total = files.length
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const ext = file.name.split('.').pop()
-        const path = `${serviceRecordId}/${Date.now()}-${i}.${ext}`
-
-        const { error: uploadError } = await supabase.storage.from('service-photos').upload(path, file)
-
-        if (uploadError) {
-          return { urls, error: `Failed to upload ${file.name}: ${uploadError.message}` }
-        }
-
-        await supabase.from('service_photos').insert({
-          service_record_id: serviceRecordId,
-          file_url: path,
-          file_type: getFileType(file),
-        })
-
-        urls.push(path)
-        setProgress(Math.round(((i + 1) / total) * 100))
-      }
-
-      return { urls, error: null }
-    } finally {
-      setUploading(false)
-    }
+  return {
+    uploadFiles: mutation.mutateAsync,
+    uploading: mutation.isPending,
+    progress,
   }
-
-  return { uploadFiles, uploading, progress }
 }

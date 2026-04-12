@@ -1,16 +1,19 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PageLoader } from '@/app/lazy-pages'
+import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { OrderDetail } from '../components/OrderDetail'
 import { OrderActions } from '../components/OrderActions'
 import { useOrder } from '../hooks/useOrders'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useGoBack } from '@/hooks/use-go-back'
 import { generateWhatsAppUrl, buildJobDoneMessage } from '@/lib/utils'
+import { isCompleted } from '@/lib/business-rules'
 import type { Order } from '@/lib/types'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 
 function WhatsAppButton({ order }: { order: Order }) {
-  if (!order.service_record || !['job_done', 'reviewed', 'closed'].includes(order.status)) {
+  if (!order.service_record || !isCompleted(order.status)) {
     return null
   }
 
@@ -29,7 +32,7 @@ function WhatsAppButton({ order }: { order: Order }) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
+        <MessageCircle aria-hidden="true" className="mr-1.5 h-3.5 w-3.5" />
         WhatsApp
       </a>
     </Button>
@@ -38,54 +41,34 @@ function WhatsAppButton({ order }: { order: Order }) {
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const goBack = useGoBack()
   const { role } = useAuth()
-  const { order, loading, refetch } = useOrder(id ?? '')
+  const { data: order, isPending } = useOrder(id ?? '')
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    )
-  }
+  if (isPending) return <PageLoader />
 
   if (!order) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-muted-foreground">Order not found</p>
-        <Button variant="link" onClick={() => navigate('/orders')}>
-          Back to orders
-        </Button>
-      </div>
-    )
+    return <NotFoundFallback />
   }
 
   return (
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Go back"
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/orders'))}
-          >
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="ghost" size="icon" aria-label="Go back" onClick={goBack}>
+            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           </Button>
           <h1 className="min-w-0 flex-1 text-base font-semibold sm:text-2xl">{order.order_no}</h1>
           {/* Desktop: buttons inline with header */}
           <div className="hidden items-center gap-2 sm:flex">
             <WhatsAppButton order={order} />
-            {role && <OrderActions order={order} userRole={role} onUpdated={refetch} />}
+            {role && <OrderActions order={order} userRole={role} />}
           </div>
         </div>
         {/* Mobile: buttons on second line */}
         <div className="flex flex-wrap items-center gap-2 sm:hidden">
           <WhatsAppButton order={order} />
-          {role && <OrderActions order={order} userRole={role} onUpdated={refetch} />}
+          {role && <OrderActions order={order} userRole={role} />}
         </div>
       </div>
 

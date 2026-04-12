@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/sidebar'
 import { LayoutDashboard, ClipboardList, PlusCircle } from 'lucide-react'
 
+const APP_VERSION = __APP_VERSION__
+
 export function AdminSidebar() {
   const { role } = useAuth()
 
@@ -24,14 +26,8 @@ export function AdminSidebar() {
             {role === 'manager' && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/"
-                    end
-                    className={({ isActive }) =>
-                      isActive ? 'bg-sidebar-accent' : ''
-                    }
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
+                  <NavLink to="/" end className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
+                    <LayoutDashboard aria-hidden="true" className="h-4 w-4" />
                     <span>Dashboard</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -39,14 +35,8 @@ export function AdminSidebar() {
             )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <NavLink
-                  to="/orders"
-                  end
-                  className={({ isActive }) =>
-                    isActive ? 'bg-sidebar-accent' : ''
-                  }
-                >
-                  <ClipboardList className="h-4 w-4" />
+                <NavLink to="/orders" end className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
+                  <ClipboardList aria-hidden="true" className="h-4 w-4" />
                   <span>Orders</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -54,13 +44,8 @@ export function AdminSidebar() {
             {role === 'admin' && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/orders/new"
-                    className={({ isActive }) =>
-                      isActive ? 'bg-sidebar-accent' : ''
-                    }
-                  >
-                    <PlusCircle className="h-4 w-4" />
+                  <NavLink to="/orders/new" className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
+                    <PlusCircle aria-hidden="true" className="h-4 w-4" />
                     <span>New Order</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -70,9 +55,7 @@ export function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <p className="px-4 pb-2 text-xs text-muted-foreground">
-          Sejuk Sejuk Service v1.0
-        </p>
+        <p className="px-4 pb-2 text-xs text-muted-foreground">Sejuk Sejuk Service v{APP_VERSION}</p>
       </SidebarFooter>
     </Sidebar>
   )
