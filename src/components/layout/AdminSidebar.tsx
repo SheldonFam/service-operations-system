@@ -26,13 +26,7 @@ export function AdminSidebar() {
             {role === 'manager' && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/"
-                    end
-                    className={({ isActive }) =>
-                      isActive ? 'bg-sidebar-accent' : ''
-                    }
-                  >
+                  <NavLink to="/" end className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
                     <LayoutDashboard aria-hidden="true" className="h-4 w-4" />
                     <span>Dashboard</span>
                   </NavLink>
@@ -41,13 +35,7 @@ export function AdminSidebar() {
             )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <NavLink
-                  to="/orders"
-                  end
-                  className={({ isActive }) =>
-                    isActive ? 'bg-sidebar-accent' : ''
-                  }
-                >
+                <NavLink to="/orders" end className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
                   <ClipboardList aria-hidden="true" className="h-4 w-4" />
                   <span>Orders</span>
                 </NavLink>
@@ -56,12 +44,7 @@ export function AdminSidebar() {
             {role === 'admin' && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/orders/new"
-                    className={({ isActive }) =>
-                      isActive ? 'bg-sidebar-accent' : ''
-                    }
-                  >
+                  <NavLink to="/orders/new" className={({ isActive }) => (isActive ? 'bg-sidebar-accent' : '')}>
                     <PlusCircle aria-hidden="true" className="h-4 w-4" />
                     <span>New Order</span>
                   </NavLink>
@@ -72,9 +55,7 @@ export function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <p className="px-4 pb-2 text-xs text-muted-foreground">
-          Sejuk Sejuk Service v{APP_VERSION}
-        </p>
+        <p className="px-4 pb-2 text-xs text-muted-foreground">Sejuk Sejuk Service v{APP_VERSION}</p>
       </SidebarFooter>
     </Sidebar>
   )

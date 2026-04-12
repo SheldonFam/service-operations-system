@@ -30,10 +30,7 @@ function aggregate(orders: DashboardOrderRow[]): DashboardData {
   let pendingReview = 0
   let totalRevenue = 0
 
-  const techMap = new Map<
-    string,
-    { name: string; jobs: number; amount: number; postpones: number }
-  >()
+  const techMap = new Map<string, { name: string; jobs: number; amount: number; postpones: number }>()
 
   for (const order of orders) {
     const completed = isCompleted(order.status)

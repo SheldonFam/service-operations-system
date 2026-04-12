@@ -16,10 +16,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const Icon = config.icon
 
   return (
-    <Badge
-      variant="secondary"
-      className={cn(config.className, 'font-medium', className)}
-    >
+    <Badge variant="secondary" className={cn(config.className, 'font-medium', className)}>
       <Icon aria-hidden="true" data-icon="inline-start" />
       {config.label}
     </Badge>

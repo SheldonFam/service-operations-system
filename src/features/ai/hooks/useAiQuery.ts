@@ -1,10 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import {
-  aiQueryErrorSchema,
-  aiQuerySuccessSchema,
-} from '../schemas/ai-query.schema'
+import { aiQueryErrorSchema, aiQuerySuccessSchema } from '../schemas/ai-query.schema'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -69,10 +66,7 @@ export function useAiQuery() {
 
       try {
         const answer = await mutation.mutateAsync(question)
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: answer, id: nextId() },
-        ])
+        setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: nextId() }])
       } catch {
         setLastFailedQuestion(question)
       }
@@ -97,7 +91,9 @@ export function useAiQuery() {
     mutation.reset()
   }, [mutation])
 
-  const error = mutation.error?.message ?? (lastFailedQuestion && !session ? 'Your session has expired. Please sign in again.' : null)
+  const error =
+    mutation.error?.message ??
+    (lastFailedQuestion && !session ? 'Your session has expired. Please sign in again.' : null)
 
   return {
     messages,

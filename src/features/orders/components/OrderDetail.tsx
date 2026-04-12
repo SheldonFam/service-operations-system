@@ -1,10 +1,5 @@
 import { useMemo } from 'react'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { StatusTimeline } from './StatusTimeline'
@@ -13,16 +8,7 @@ import type { Order } from '@/lib/types'
 import { formatCurrency, formatDateTime, cn, buildTelHref } from '@/lib/utils'
 import { useSignedPhotoUrls } from '@/features/jobs/hooks/useSignedPhotoUrls'
 import { InlineError } from '@/components/InlineError'
-import {
-  User,
-  Phone,
-  MapPin,
-  FileText,
-  Wrench,
-  DollarSign,
-  Clock,
-  MessageSquare,
-} from 'lucide-react'
+import { User, Phone, MapPin, FileText, Wrench, DollarSign, Clock, MessageSquare } from 'lucide-react'
 
 interface OrderDetailProps {
   order: Order
@@ -33,17 +19,13 @@ export function OrderDetail({ order }: OrderDetailProps) {
     () => order.service_record?.photos?.map((p) => p.file_url) ?? [],
     [order.service_record?.photos],
   )
-  const { data: signedUrls, error: signedUrlsError, refetch: retrySignedUrls } =
-    useSignedPhotoUrls(photoPaths)
+  const { data: signedUrls, error: signedUrlsError, refetch: retrySignedUrls } = useSignedPhotoUrls(photoPaths)
 
   return (
     <div className="space-y-6">
       {/* Status Timeline */}
       <Card className="p-3 sm:p-4">
-        <StatusTimeline
-          currentStatus={order.status}
-          postponeCount={order.postpone_count}
-        />
+        <StatusTimeline currentStatus={order.status} postponeCount={order.postpone_count} />
       </Card>
 
       {/* Order Info */}
@@ -83,32 +65,21 @@ export function OrderDetail({ order }: OrderDetailProps) {
             </div>
             <div className="flex items-center gap-2">
               <Wrench aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
-              <Badge
-                variant="secondary"
-                className={cn(SERVICE_TYPE_COLORS[order.service_type])}
-              >
+              <Badge variant="secondary" className={cn(SERVICE_TYPE_COLORS[order.service_type])}>
                 {order.service_type}
               </Badge>
             </div>
             <div className="flex items-center gap-2">
               <DollarSign aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">
-                {formatCurrency(order.quoted_price)}
-              </span>
+              <span className="font-medium">{formatCurrency(order.quoted_price)}</span>
             </div>
             <div className="flex items-center gap-2">
               <User aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {order.technician?.name ?? (
-                  <span className="text-muted-foreground">Unassigned</span>
-                )}
-              </span>
+              <span>{order.technician?.name ?? <span className="text-muted-foreground">Unassigned</span>}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {formatDateTime(order.created_at)}
-              </span>
+              <span className="text-sm text-muted-foreground">{formatDateTime(order.created_at)}</span>
             </div>
           </CardContent>
         </Card>
@@ -133,9 +104,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
       {order.postpone_reason && (
         <Card className="border-orange-200">
           <CardHeader>
-            <CardTitle className="text-base text-orange-700">
-              Postpone Reason
-            </CardTitle>
+            <CardTitle className="text-base text-orange-700">Postpone Reason</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{order.postpone_reason}</p>
@@ -158,15 +127,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-sm text-muted-foreground">Quoted Price</p>
-                <p className="font-medium">
-                  {formatCurrency(order.quoted_price)}
-                </p>
+                <p className="font-medium">{formatCurrency(order.quoted_price)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Extra Charges</p>
-                <p className="font-medium">
-                  {formatCurrency(order.service_record.extra_charges)}
-                </p>
+                <p className="font-medium">{formatCurrency(order.service_record.extra_charges)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Final Amount</p>
@@ -184,56 +149,53 @@ export function OrderDetail({ order }: OrderDetailProps) {
                 </div>
               </>
             )}
-            {order.service_record.photos &&
-              order.service_record.photos.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      Service Photos
-                    </p>
-                    {signedUrlsError && (
-                      <InlineError
-                        message={`Couldn't load photo previews. ${signedUrlsError}`}
-                        onRetry={retrySignedUrls}
-                        className="mb-2"
-                      />
-                    )}
-                    <div className="grid grid-cols-3 gap-2">
-                      {order.service_record.photos.map((photo) => {
-                        const url = signedUrls?.[photo.file_url]
-                        return (
-                          <a
-                            key={photo.id}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="overflow-hidden rounded-md border"
-                            aria-disabled={!url || undefined}
-                            onClick={(e) => {
-                              if (!url) e.preventDefault()
-                            }}
-                          >
-                            {photo.file_type === 'image' && url ? (
-                              <img
-                                src={url}
-                                alt="Service photo"
-                                loading="lazy"
-                                decoding="async"
-                                className="aspect-square w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex aspect-square items-center justify-center bg-muted text-xs text-muted-foreground">
-                                {photo.file_type.toUpperCase()}
-                              </div>
-                            )}
-                          </a>
-                        )
-                      })}
-                    </div>
+            {order.service_record.photos && order.service_record.photos.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <p className="mb-2 text-sm text-muted-foreground">Service Photos</p>
+                  {signedUrlsError && (
+                    <InlineError
+                      message={`Couldn't load photo previews. ${signedUrlsError}`}
+                      onRetry={retrySignedUrls}
+                      className="mb-2"
+                    />
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
+                    {order.service_record.photos.map((photo) => {
+                      const url = signedUrls?.[photo.file_url]
+                      return (
+                        <a
+                          key={photo.id}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="overflow-hidden rounded-md border"
+                          aria-disabled={!url || undefined}
+                          onClick={(e) => {
+                            if (!url) e.preventDefault()
+                          }}
+                        >
+                          {photo.file_type === 'image' && url ? (
+                            <img
+                              src={url}
+                              alt="Service photo"
+                              loading="lazy"
+                              decoding="async"
+                              className="aspect-square w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex aspect-square items-center justify-center bg-muted text-xs text-muted-foreground">
+                              {photo.file_type.toUpperCase()}
+                            </div>
+                          )}
+                        </a>
+                      )
+                    })}
                   </div>
-                </>
-              )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

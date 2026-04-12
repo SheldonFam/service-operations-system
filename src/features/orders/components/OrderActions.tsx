@@ -115,11 +115,7 @@ export function OrderActions({ order, userRole }: OrderActionsProps) {
             <UserPlus aria-hidden="true" className="mr-2 h-4 w-4" />
             {isReassignment(order.status) ? 'Reassign' : 'Assign Technician'}
           </Button>
-          <AssignTechDialog
-            order={order}
-            open={assignOpen}
-            onClose={() => setAssignOpen(false)}
-          />
+          <AssignTechDialog order={order} open={assignOpen} onClose={() => setAssignOpen(false)} />
         </>
       )}
 
@@ -173,11 +169,7 @@ export function OrderActions({ order, userRole }: OrderActionsProps) {
               Postpone
             </Button>
           </div>
-          <PostponeDialog
-            order={order}
-            open={postponeOpen}
-            onClose={() => setPostponeOpen(false)}
-          />
+          <PostponeDialog order={order} open={postponeOpen} onClose={() => setPostponeOpen(false)} />
         </>
       )}
     </div>

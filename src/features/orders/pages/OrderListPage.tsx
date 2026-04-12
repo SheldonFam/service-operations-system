@@ -2,13 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { OrderTable } from '../components/OrderTable'
 import { useOrders } from '../hooks/useOrders'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -43,8 +37,13 @@ export function OrderListPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <label htmlFor="order-search" className="sr-only">Search orders</label>
-          <Search aria-hidden="true" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <label htmlFor="order-search" className="sr-only">
+            Search orders
+          </label>
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          />
           <Input
             id="order-search"
             type="search"
@@ -56,9 +55,7 @@ export function OrderListPage() {
         </div>
         <Select
           value={statusFilter ?? 'all'}
-          onValueChange={(v) =>
-            setStatusFilter(v === 'all' ? undefined : (v as OrderStatus))
-          }
+          onValueChange={(v) => setStatusFilter(v === 'all' ? undefined : (v as OrderStatus))}
         >
           <SelectTrigger aria-label="Filter by status" className="w-full sm:w-[180px]">
             <SelectValue placeholder="All Statuses" />

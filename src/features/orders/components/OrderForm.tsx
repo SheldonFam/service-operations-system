@@ -91,12 +91,7 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Customer Name" error={errors.customer_name?.message} required>
               {(fieldProps) => (
-                <Input
-                  placeholder="e.g. Ahmad"
-                  autoComplete="name"
-                  {...register('customer_name')}
-                  {...fieldProps}
-                />
+                <Input placeholder="e.g. Ahmad" autoComplete="name" {...register('customer_name')} {...fieldProps} />
               )}
             </FormField>
 

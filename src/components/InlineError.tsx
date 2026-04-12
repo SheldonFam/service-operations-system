@@ -17,13 +17,7 @@ export function InlineError({ message, onRetry, className }: InlineErrorProps) {
       <div className="flex-1">
         <p>{message}</p>
         {onRetry && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onRetry}
-            className="mt-2 h-7 gap-1.5 text-xs"
-          >
+          <Button type="button" variant="outline" size="sm" onClick={onRetry} className="mt-2 h-7 gap-1.5 text-xs">
             <RotateCcw aria-hidden="true" className="h-3 w-3" />
             Retry
           </Button>

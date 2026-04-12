@@ -15,9 +15,7 @@ export function JobsChart({ technicians }: JobsChartProps) {
           <CardTitle className="text-base">Jobs Completed</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No data available for this period.
-          </p>
+          <p className="text-sm text-muted-foreground">No data available for this period.</p>
         </CardContent>
       </Card>
     )
@@ -35,15 +33,10 @@ export function JobsChart({ technicians }: JobsChartProps) {
             <div key={tech.id} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="truncate font-medium">{tech.name}</span>
-                <span className="shrink-0 text-muted-foreground">
-                  {tech.jobs_completed}
-                </span>
+                <span className="shrink-0 text-muted-foreground">{tech.jobs_completed}</span>
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width]"
-                  style={{ width: `${pct}%` }}
-                />
+                <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${pct}%` }} />
               </div>
             </div>
           )

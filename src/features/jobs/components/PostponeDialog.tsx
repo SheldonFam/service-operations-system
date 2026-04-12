@@ -23,11 +23,7 @@ interface PostponeDialogProps {
   onClose: () => void
 }
 
-export function PostponeDialog({
-  order,
-  open,
-  onClose,
-}: PostponeDialogProps) {
+export function PostponeDialog({ order, open, onClose }: PostponeDialogProps) {
   const postponeJobMutation = usePostponeJob()
 
   const {
@@ -62,9 +58,7 @@ export function PostponeDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Postpone Job</DialogTitle>
-          <DialogDescription>
-            Provide a reason for postponing {order.order_no}
-          </DialogDescription>
+          <DialogDescription>Provide a reason for postponing {order.order_no}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <fieldset disabled={isSubmitting} className="space-y-4">

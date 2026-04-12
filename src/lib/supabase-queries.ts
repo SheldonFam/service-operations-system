@@ -1,10 +1,5 @@
 import { supabase } from './supabase'
-import {
-  PHOTO_SIGN_TTL_SECONDS,
-  getFileType,
-  safeExtension,
-  validateUploadFiles,
-} from './files'
+import { PHOTO_SIGN_TTL_SECONDS, getFileType, safeExtension, validateUploadFiles } from './files'
 import type { Order, OrderStatus, PaymentMethod, ServiceType, User } from './types'
 import type { OrderFormValues } from '@/features/orders/schemas/order.schema'
 
@@ -91,10 +86,7 @@ export async function listOrders(
   return { data: (data as OrderListRow[] | null) ?? [], error: err(error?.message) }
 }
 
-export async function getOrderById(
-  id: string,
-  signal: AbortSignal,
-): Promise<Result<Order>> {
+export async function getOrderById(id: string, signal: AbortSignal): Promise<Result<Order>> {
   const { data, error } = await supabase
     .from('orders')
     .select(
@@ -121,8 +113,8 @@ function normalizeOrder(raw: unknown): Order | null {
   const row = raw as RawOrderRow
   const { service_record, ...rest } = row
   const collapsed: Order['service_record'] = Array.isArray(service_record)
-    ? service_record[0] ?? null
-    : service_record ?? null
+    ? (service_record[0] ?? null)
+    : (service_record ?? null)
   return { ...rest, service_record: collapsed }
 }
 
@@ -135,10 +127,7 @@ export async function updateOrder(id: string, updates: OrderUpdatable): Promise<
   return { error: err(error?.message) }
 }
 
-export async function createOrder(
-  values: OrderFormValues,
-  createdBy: string,
-): Promise<Result<Order>> {
+export async function createOrder(values: OrderFormValues, createdBy: string): Promise<Result<Order>> {
   const orderNo = await generateOrderNo()
   const status: OrderStatus = values.assigned_technician ? 'assigned' : 'new'
 
@@ -393,7 +382,11 @@ export async function uploadServicePhotos(
 
   // Stage 1: Upload all files to storage in parallel.
   // Each file gets its own path; we collect metadata for the bulk DB insert.
-  interface UploadResult { path: string; file: File; error: string | null }
+  interface UploadResult {
+    path: string
+    file: File
+    error: string | null
+  }
 
   // Use Promise.allSettled-style approach: every upload runs to completion
   // and we report progress monotonically (processed / total).
@@ -426,7 +419,9 @@ export async function uploadServicePhotos(
       await supabase.storage
         .from('service-photos')
         .remove(uploaded.map((u) => u.path))
-        .catch(() => { /* best-effort cleanup */ })
+        .catch(() => {
+          /* best-effort cleanup */
+        })
     }
     return { urls: [], error: firstError.error }
   }
@@ -450,16 +445,12 @@ export async function uploadServicePhotos(
   return { urls: uploaded.map((u) => u.path), error: null }
 }
 
-export type SignedUrlsResult =
-  | { ok: true; urls: Record<string, string> }
-  | { ok: false; error: string }
+export type SignedUrlsResult = { ok: true; urls: Record<string, string> } | { ok: false; error: string }
 
 export async function signServicePhotoUrls(paths: string[]): Promise<SignedUrlsResult> {
   if (paths.length === 0) return { ok: true, urls: {} }
 
-  const { data, error } = await supabase.storage
-    .from('service-photos')
-    .createSignedUrls(paths, PHOTO_SIGN_TTL_SECONDS)
+  const { data, error } = await supabase.storage.from('service-photos').createSignedUrls(paths, PHOTO_SIGN_TTL_SECONDS)
 
   if (error || !data) {
     return { ok: false, error: error?.message ?? 'Failed to load photo URLs' }

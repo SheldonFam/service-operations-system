@@ -9,16 +9,7 @@ const MB = 1024 * 1024
 
 export const PHOTO_SIGN_TTL_SECONDS = 60 * 60 // 1 hour
 
-export const ALLOWED_PHOTO_EXTENSIONS = new Set([
-  'jpg',
-  'jpeg',
-  'png',
-  'gif',
-  'webp',
-  'mp4',
-  'mov',
-  'pdf',
-])
+export const ALLOWED_PHOTO_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'pdf'])
 
 export function safeExtension(name: string): string | null {
   const dot = name.lastIndexOf('.')
@@ -35,9 +26,7 @@ export function getFileType(file: File): ServicePhoto['file_type'] {
   return 'pdf'
 }
 
-export type FileValidationResult =
-  | { ok: true }
-  | { ok: false; file: File; reason: string }
+export type FileValidationResult = { ok: true } | { ok: false; file: File; reason: string }
 
 /**
  * Validate a single file's size and extension. Used by the client to surface

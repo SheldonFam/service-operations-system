@@ -28,9 +28,7 @@ export function UserMenu() {
         <Avatar className="h-8 w-8">
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
-        <span className="hidden text-sm font-medium md:inline">
-          {user.name}
-        </span>
+        <span className="hidden text-sm font-medium md:inline">{user.name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel className="font-normal">

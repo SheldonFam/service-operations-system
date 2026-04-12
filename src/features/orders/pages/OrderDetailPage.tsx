@@ -55,12 +55,7 @@ export function OrderDetailPage() {
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Go back"
-            onClick={goBack}
-          >
+          <Button variant="ghost" size="icon" aria-label="Go back" onClick={goBack}>
             <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           </Button>
           <h1 className="min-w-0 flex-1 text-base font-semibold sm:text-2xl">{order.order_no}</h1>

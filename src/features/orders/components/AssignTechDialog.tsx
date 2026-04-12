@@ -10,13 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '@/components/ui/form-field'
 import { useTechnicians, useUpdateOrder } from '../hooks/useOrders'
 import { assignTechSchema } from '../schemas/order.schema'
@@ -33,11 +27,7 @@ interface AssignTechDialogProps {
   onClose: () => void
 }
 
-export function AssignTechDialog({
-  order,
-  open,
-  onClose,
-}: AssignTechDialogProps) {
+export function AssignTechDialog({ order, open, onClose }: AssignTechDialogProps) {
   const { data: technicians, isPending: techLoading } = useTechnicians()
   const updateOrderMutation = useUpdateOrder()
   const [whatsappLink, setWhatsappLink] = useState<WhatsAppLink | null>(null)
@@ -102,9 +92,7 @@ export function AssignTechDialog({
         <DialogHeader>
           <DialogTitle>{whatsappLink ? 'Technician Assigned' : 'Assign Technician'}</DialogTitle>
           <DialogDescription>
-            {whatsappLink
-              ? 'Notify the technician via WhatsApp.'
-              : `Select a technician for order ${order.order_no}`}
+            {whatsappLink ? 'Notify the technician via WhatsApp.' : `Select a technician for order ${order.order_no}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +100,9 @@ export function AssignTechDialog({
           <div className="space-y-3">
             <WhatsAppLinkButton label={whatsappLink.label} url={whatsappLink.url} />
             <DialogFooter>
-              <Button type="button" onClick={handleClose}>Done</Button>
+              <Button type="button" onClick={handleClose}>
+                Done
+              </Button>
             </DialogFooter>
           </div>
         ) : (

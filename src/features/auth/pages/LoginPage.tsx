@@ -6,13 +6,7 @@ import { loginSchema } from '../schemas/login.schema'
 import type { LoginFormValues } from '../schemas/login.schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormField } from '@/components/ui/form-field'
 import { mapSignInError } from '@/lib/utils'
 import { Snowflake } from 'lucide-react'
@@ -77,12 +71,7 @@ export function LoginPage() {
 
               <FormField label="Password" error={errors.password?.message} required>
                 {(fieldProps) => (
-                  <Input
-                    type="password"
-                    autoComplete="current-password"
-                    {...register('password')}
-                    {...fieldProps}
-                  />
+                  <Input type="password" autoComplete="current-password" {...register('password')} {...fieldProps} />
                 )}
               </FormField>
 

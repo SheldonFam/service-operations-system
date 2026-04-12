@@ -29,9 +29,7 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
               <card.icon aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-xs text-muted-foreground">
-                {card.label}
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{card.label}</p>
               <p className="text-lg font-semibold leading-tight tabular-nums">
                 {(card.format ?? String)(summary[card.key])}
               </p>

@@ -1,20 +1,8 @@
 export type UserRole = 'admin' | 'technician' | 'manager'
 
-export type OrderStatus =
-  | 'new'
-  | 'assigned'
-  | 'in_progress'
-  | 'postponed'
-  | 'job_done'
-  | 'reviewed'
-  | 'closed'
+export type OrderStatus = 'new' | 'assigned' | 'in_progress' | 'postponed' | 'job_done' | 'reviewed' | 'closed'
 
-export type ServiceType =
-  | 'Cleaning'
-  | 'Repair'
-  | 'Installation'
-  | 'Gas Refill'
-  | 'Inspection'
+export type ServiceType = 'Cleaning' | 'Repair' | 'Installation' | 'Gas Refill' | 'Inspection'
 
 export type PaymentMethod = 'Cash' | 'Bank Transfer' | 'Card' | 'E-Wallet'
 

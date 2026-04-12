@@ -27,9 +27,7 @@ export function DashboardPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Technician performance metrics
-          </p>
+          <p className="text-sm text-muted-foreground">Technician performance metrics</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1 rounded-lg border p-1" role="group" aria-label="Date range">
@@ -49,7 +47,13 @@ export function DashboardPage() {
               </button>
             ))}
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => refetch()} aria-label="Refresh dashboard" disabled={isPending}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => refetch()}
+            aria-label="Refresh dashboard"
+            disabled={isPending}
+          >
             <RefreshCw aria-hidden="true" className={cn('h-4 w-4', isPending && 'animate-spin')} />
           </Button>
         </div>
