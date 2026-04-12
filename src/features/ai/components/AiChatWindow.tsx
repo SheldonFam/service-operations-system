@@ -1,46 +1,40 @@
-import { useState, useRef, useEffect } from "react";
-import Markdown from "react-markdown";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { useAiQuery } from "../hooks/useAiQuery";
-import { cn } from "@/lib/utils";
-import { InlineError } from "@/components/InlineError";
-import { Bot, Send, Trash2 } from "lucide-react";
+import { useState, useRef, useEffect } from 'react'
+import Markdown from 'react-markdown'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { useAiQuery } from '../hooks/useAiQuery'
+import { cn } from '@/lib/utils'
+import { InlineError } from '@/components/InlineError'
+import { Bot, Send, Trash2 } from 'lucide-react'
 
 const SUGGESTIONS = [
-  "How many jobs were completed today?",
-  "Which technician completed the most jobs this week?",
-  "What jobs did technician Ali complete last week?",
-];
+  'How many jobs were completed today?',
+  'Which technician completed the most jobs this week?',
+  'What jobs did technician Ali complete last week?',
+]
 
 export function AiChatWindow() {
-  const { messages, loading, error, ask, retry, clear } = useAiQuery();
-  const [input, setInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { messages, loading, error, ask, retry, clear } = useAiQuery()
+  const [input, setInput] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
-  }, [messages, error, loading]);
+    scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight)
+  }, [messages, error, loading])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = input.trim();
-    if (!q || loading) return;
-    setInput("");
-    void ask(q);
-  };
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const q = input.trim()
+    if (!q || loading) return
+    setInput('')
+    void ask(q)
+  }
 
   const handleSuggestion = (q: string) => {
-    if (loading) return;
-    void ask(q);
-  };
+    if (loading) return
+    void ask(q)
+  }
 
   return (
     <Sheet>
@@ -61,12 +55,7 @@ export function AiChatWindow() {
               AI Assistant
             </SheetTitle>
             {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={clear}
-                aria-label="Clear chat"
-              >
+              <Button variant="ghost" size="icon-sm" onClick={clear} aria-label="Clear chat">
                 <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
               </Button>
             )}
@@ -91,14 +80,11 @@ export function AiChatWindow() {
                 </div>
                 <p className="text-sm font-medium">Ask about your operations</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  I can answer questions about orders, technicians, and job
-                  performance.
+                  I can answer questions about orders, technicians, and job performance.
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Try asking:
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Try asking:</p>
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
@@ -114,19 +100,11 @@ export function AiChatWindow() {
           ) : (
             <div className="space-y-4">
               {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex",
-                    msg.role === "user" ? "justify-end" : "justify-start",
-                  )}
-                >
+                <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted",
+                      'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                      msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted',
                     )}
                   >
                     {msg.role === 'assistant' ? (
@@ -141,23 +119,16 @@ export function AiChatWindow() {
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                    Thinking…
-                  </div>
+                  <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">Thinking…</div>
                 </div>
               )}
-              {error && !loading && (
-                <InlineError message={error} onRetry={retry} />
-              )}
+              {error && !loading && <InlineError message={error} onRetry={retry} />}
             </div>
           )}
         </div>
 
         {/* Input */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex items-center gap-2 border-t p-3"
-        >
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t p-3">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -171,5 +142,5 @@ export function AiChatWindow() {
         </form>
       </SheetContent>
     </Sheet>
-  );
+  )
 }
