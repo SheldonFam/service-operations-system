@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useForm, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,86 +9,31 @@ import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '@/components/ui/form-field'
 import { FileUpload } from './FileUpload'
+import { CompletionNotifications } from './CompletionNotifications'
+import { OrderSummaryCard } from './OrderSummaryCard'
 import { useCompleteJob } from '../hooks/useJobs'
 import { useUpload } from '../hooks/useUpload'
 import { useManagers } from '@/features/orders/hooks/useOrders'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { serviceSchema } from '../schemas/service.schema'
 import type { ServiceFormValues } from '../schemas/service.schema'
-import type { Order, User as UserModel } from '@/lib/types'
+import type { Order } from '@/lib/types'
 import { PAYMENT_METHODS } from '@/lib/constants'
-import { WhatsAppLinkButton, type WhatsAppLink } from '@/components/WhatsAppLinkButton'
-import {
-  formatCurrency,
-  formatDateTime,
-  generateWhatsAppUrl,
-  buildJobDoneMessage,
-  buildManagerNotifyMessage,
-} from '@/lib/utils'
+import type { WhatsAppLink } from '@/components/WhatsAppLinkButton'
+import { formatCurrency, buildNotificationLinks } from '@/lib/utils'
 import { toast } from 'sonner'
-import { User, Clock, CheckCircle2 } from 'lucide-react'
 
 interface ServiceFormProps {
   order: Order
 }
 
-function buildNotifications(
-  order: Order,
-  technicianName: string,
-  completedAt: string,
-  managers: UserModel[],
-): WhatsAppLink[] {
-  const list: WhatsAppLink[] = []
-
-  list.push({
-    label: `Customer (${order.customer_name})`,
-    url: generateWhatsAppUrl(
-      order.phone,
-      buildJobDoneMessage({
-        customerName: order.customer_name,
-        orderId: order.order_no,
-        technicianName,
-        completedAt,
-      }),
-    ),
-  })
-
-  for (const mgr of managers) {
-    if (mgr.phone) {
-      list.push({
-        label: `Manager (${mgr.name})`,
-        url: generateWhatsAppUrl(
-          mgr.phone,
-          buildManagerNotifyMessage({
-            orderId: order.order_no,
-            customerName: order.customer_name,
-            technicianName,
-            completedAt,
-          }),
-        ),
-      })
-    }
-  }
-
-  return list
-}
-
 export function ServiceForm({ order }: ServiceFormProps) {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const completeJobMutation = useCompleteJob()
   const { uploadFiles, uploading, progress } = useUpload()
-  // Prefetch managers when the form mounts so the success path doesn't add
-  // a sequential round-trip after upload finishes.
   const { data: managers } = useManagers()
   const [files, setFiles] = useState<File[]>([])
-  // The "completed at" timestamp is set at submission time, not mount time,
-  // so the WhatsApp notification and DB record use the same accurate value.
   const [completedAt, setCompletedAt] = useState<string | null>(null)
-
-  // After successful completion, render a panel of click-to-open WhatsApp
-  // links instead of calling window.open in a loop. Real anchor clicks
-  // preserve the user gesture so popup blockers don't fire.
   const [notifications, setNotifications] = useState<WhatsAppLink[] | null>(null)
 
   const {
@@ -140,93 +84,34 @@ export function ServiceForm({ order }: ServiceFormProps) {
     if (serviceRecordId && files.length > 0) {
       const { error: uploadError } = await uploadFiles({ serviceRecordId, files })
       if (uploadError) {
-        // Photos failed but the service record + status update already
-        // succeeded. Reverting the order status here would leave the service
-        // record orphaned, so we keep the completion intact and let the user
-        // retry uploads from the order detail page.
         toast.warning(
           `Job completed but photos failed to upload: ${uploadError}. ` +
-          'You can view the order and retry from the detail page.',
+            'You can view the order and retry from the detail page.',
         )
-        // Still show the notifications panel so the user can notify the
-        // customer / managers about the completion.
       }
     }
 
     setCompletedAt(now)
-    const pending = buildNotifications(order, user.name, now, managers ?? [])
-
+    const pending = buildNotificationLinks(order, user.name, now, managers ?? [])
     toast.success('Job completed successfully!')
     setNotifications(pending)
   }
 
   if (notifications) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CheckCircle2 aria-hidden="true" className="h-5 w-5 text-emerald-600" />
-            Job Completed
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Send the WhatsApp notifications below. Each link opens in a new tab.
-          </p>
-          {notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No recipients to notify.</p>
-          ) : (
-            <ul className="space-y-2">
-              {notifications.map((n) => (
-                <li key={n.url}>
-                  <WhatsAppLinkButton label={`Send to ${n.label}`} url={n.url} />
-                </li>
-              ))}
-            </ul>
-          )}
-          <Button type="button" className="w-full" onClick={() => navigate('/orders')}>
-            Done
-          </Button>
-        </CardContent>
-      </Card>
-    )
+    return <CompletionNotifications notifications={notifications} />
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <fieldset disabled={isBusy} className="space-y-6">
-        {/* Order Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Order Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>
-              <span className="text-muted-foreground">Customer:</span> {order.customer_name}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Service:</span> {order.service_type}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Problem:</span> {order.problem_description}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Quoted Price:</span>{' '}
-              <span className="font-medium">{formatCurrency(order.quoted_price)}</span>
-            </p>
-            <Separator className="my-2" />
-            <div className="flex items-center gap-2">
-              <User aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Technician:</span>{' '}
-              <span className="font-medium">{user?.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Timestamp:</span>{' '}
-              <span className="font-medium">{completedAt ? formatDateTime(completedAt) : '—'}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <OrderSummaryCard
+          customerName={order.customer_name}
+          serviceType={order.service_type}
+          problemDescription={order.problem_description}
+          quotedPrice={order.quoted_price}
+          technicianName={user?.name ?? ''}
+          completedAt={completedAt}
+        />
 
         {/* Service Details */}
         <Card>
@@ -248,9 +133,7 @@ export function ServiceForm({ order }: ServiceFormProps) {
             <FormField label="Extra Charges (RM)" error={errors.extra_charges?.message}>
               {(fieldProps) => (
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    RM
-                  </span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">RM</span>
                   <Input
                     type="number"
                     step="0.01"

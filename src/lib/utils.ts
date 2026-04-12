@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 /** Extract up to 2 initials from a display name. */
@@ -31,29 +31,29 @@ export function formatDate(date: string | null | undefined): string {
   if (!date) return '—'
   const d = new Date(date)
   if (isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString("en-MY", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return d.toLocaleDateString('en-MY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 export function formatDateTime(date: string | null | undefined): string {
   if (!date) return '—'
   const d = new Date(date)
   if (isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString("en-MY", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return d.toLocaleDateString('en-MY', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 export function formatCurrency(amount: number): string {
   if (!Number.isFinite(amount)) return 'RM 0.00'
-  return `RM ${amount.toFixed(2)}`;
+  return `RM ${amount.toFixed(2)}`
 }
 
 export function buildTelHref(phone: string): string {
@@ -61,46 +61,84 @@ export function buildTelHref(phone: string): string {
   return normalized ? `tel:${normalized}` : ''
 }
 
-export function generateWhatsAppUrl(
-  phone: string,
-  message: string
-): string {
+export function generateWhatsAppUrl(phone: string, message: string): string {
   // Normalize Malaysian phone: 0123456789 → 60123456789
-  let normalized = phone.replace(/[^0-9+]/g, "");
-  if (normalized.startsWith("0")) {
-    normalized = "60" + normalized.slice(1);
-  } else if (normalized.startsWith("+")) {
-    normalized = normalized.slice(1);
+  let normalized = phone.replace(/[^0-9+]/g, '')
+  if (normalized.startsWith('0')) {
+    normalized = '60' + normalized.slice(1)
+  } else if (normalized.startsWith('+')) {
+    normalized = normalized.slice(1)
   }
   if (!normalized) return ''
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/${normalized}?text=${encoded}`;
+  const encoded = encodeURIComponent(message)
+  return `https://wa.me/${normalized}?text=${encoded}`
 }
 
 export function buildJobDoneMessage(params: {
-  customerName: string;
-  orderId: string;
-  technicianName: string;
-  completedAt: string;
+  customerName: string
+  orderId: string
+  technicianName: string
+  completedAt: string
 }): string {
-  return `Hi ${params.customerName},\nJob ${params.orderId} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease check and leave feedback.\nThank you!`;
+  return `Hi ${params.customerName},\nJob ${params.orderId} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease check and leave feedback.\nThank you!`
 }
 
 export function buildManagerNotifyMessage(params: {
-  orderId: string;
-  customerName: string;
-  technicianName: string;
-  completedAt: string;
+  orderId: string
+  customerName: string
+  technicianName: string
+  completedAt: string
 }): string {
-  return `Job Completed Notification:\nOrder ${params.orderId} for customer ${params.customerName} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease review the service record.`;
+  return `Job Completed Notification:\nOrder ${params.orderId} for customer ${params.customerName} has been completed by Technician ${params.technicianName} at ${formatDateTime(params.completedAt)}.\nPlease review the service record.`
+}
+
+export function buildNotificationLinks(
+  order: { customer_name: string; phone: string; order_no: string },
+  technicianName: string,
+  completedAt: string,
+  managers: { name: string; phone: string | null }[],
+): { label: string; url: string }[] {
+  const list: { label: string; url: string }[] = []
+
+  list.push({
+    label: `Customer (${order.customer_name})`,
+    url: generateWhatsAppUrl(
+      order.phone,
+      buildJobDoneMessage({
+        customerName: order.customer_name,
+        orderId: order.order_no,
+        technicianName,
+        completedAt,
+      }),
+    ),
+  })
+
+  for (const mgr of managers) {
+    if (mgr.phone) {
+      list.push({
+        label: `Manager (${mgr.name})`,
+        url: generateWhatsAppUrl(
+          mgr.phone,
+          buildManagerNotifyMessage({
+            orderId: order.order_no,
+            customerName: order.customer_name,
+            technicianName,
+            completedAt,
+          }),
+        ),
+      })
+    }
+  }
+
+  return list
 }
 
 export function buildAssignmentMessage(params: {
-  technicianName: string;
-  orderId: string;
-  customerName: string;
-  address: string;
-  serviceType: string;
+  technicianName: string
+  orderId: string
+  customerName: string
+  address: string
+  serviceType: string
 }): string {
-  return `Hi ${params.technicianName},\nYou have been assigned a new job:\nOrder: ${params.orderId}\nCustomer: ${params.customerName}\nAddress: ${params.address}\nService: ${params.serviceType}\nPlease check the portal for details.`;
+  return `Hi ${params.technicianName},\nYou have been assigned a new job:\nOrder: ${params.orderId}\nCustomer: ${params.customerName}\nAddress: ${params.address}\nService: ${params.serviceType}\nPlease check the portal for details.`
 }
