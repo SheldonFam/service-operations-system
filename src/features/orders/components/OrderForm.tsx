@@ -12,9 +12,9 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useCreateOrder, useTechnicians } from '../hooks/useOrders'
 import { orderSchema } from '../schemas/order.schema'
 import type { OrderFormValues } from '../schemas/order.schema'
-import type { User } from '@/lib/types'
 import { InlineError } from '@/components/InlineError'
 import { toast } from 'sonner'
+import type { User } from '@/lib/types'
 
 export function OrderForm() {
   const { data: technicians, isPending: techLoading, error: techError } = useTechnicians()
@@ -38,8 +38,6 @@ export function OrderForm() {
     )
   }
 
-  // Render the form only after technicians are loaded so `defaultValues`
-  // can use the first technician. This avoids the empty dropdown flash.
   return <OrderFormInner technicians={technicians} />
 }
 
@@ -62,7 +60,7 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
       address: '',
       problem_description: '',
       service_type: 'Cleaning',
-      quoted_price: NaN,
+      quoted_price: 0,
       assigned_technician: technicians[0]?.id ?? '',
       admin_notes: '',
     },
@@ -141,7 +139,7 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id={fieldProps.id} aria-invalid={fieldProps['aria-invalid']}>
-                        <SelectValue />
+                        <SelectValue placeholder="Select a service type" />
                       </SelectTrigger>
                       <SelectContent>
                         {SERVICE_TYPES.map((type) => (
@@ -181,7 +179,7 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id={fieldProps.id}>
-                        <SelectValue />
+                        <SelectValue placeholder="Select a technician" />
                       </SelectTrigger>
                       <SelectContent>
                         {technicians.map((tech) => (
@@ -208,7 +206,7 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating\u2026' : 'Create Order'}
+            {isSubmitting ? 'Creating' : 'Create Order'}
           </Button>
         </div>
       </fieldset>
