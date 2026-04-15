@@ -22,13 +22,7 @@ function SkipLink() {
 }
 
 export function AppLayout() {
-  const { role, loading } = useAuth()
-
-  // Don't commit to a layout branch until the role is known. ProtectedRoute
-  // already shows a spinner while `loading` is true, so this guard only fires
-  // if AppLayout is rendered outside a ProtectedRoute (shouldn't happen).
-  if (loading || !role) return null
-
+  const { role } = useAuth()
   const isTechnician = role === 'technician'
   const isManager = role === 'manager'
   const hasSidebar = !isTechnician
