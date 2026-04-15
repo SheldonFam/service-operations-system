@@ -1,14 +1,10 @@
-import { lazy, Suspense } from 'react'
 import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AdminSidebar } from './AdminSidebar'
 import { Header } from './Header'
+import { AiChatWindow } from '@/features/ai/components/AiChatWindow'
 import { cn } from '@/lib/utils'
-
-const AiChatWindow = lazy(() =>
-  import('@/features/ai/components/AiChatWindow').then((m) => ({ default: m.AiChatWindow })),
-)
 
 function SkipLink() {
   return (
@@ -44,11 +40,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
-      {isManager && (
-        <Suspense fallback={null}>
-          <AiChatWindow />
-        </Suspense>
-      )}
+      {isManager && <AiChatWindow />}
       <ScrollRestoration />
     </>
   )
