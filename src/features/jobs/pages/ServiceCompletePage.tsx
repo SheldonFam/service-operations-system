@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { PageLoader } from '@/app/lazy-pages'
+import { PageSkeleton } from '@/app/PageSkeleton'
 import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { ServiceForm } from '../components/ServiceForm'
 import { useOrder } from '@/features/orders/hooks/useOrders'
@@ -14,7 +14,7 @@ export function ServiceCompletePage() {
   const goBack = useGoBack()
   const { data: order, isPending } = useOrder(id ?? '')
 
-  if (isPending) return <PageLoader />
+  if (isPending) return <PageSkeleton />
 
   if (!order) {
     return <NotFoundFallback backLabel="Back to jobs" />

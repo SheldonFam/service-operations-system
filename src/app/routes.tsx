@@ -2,25 +2,18 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { NotFoundPage } from './NotFoundPage'
-import {
-  LoginPage,
-  OrdersDispatcher,
-  OrderCreatePage,
-  OrderDetailPage,
-  OrderSummaryPage,
-  ServiceCompletePage,
-  DashboardRoute,
-  SuspenseWrapper,
-} from './lazy-pages'
+import { DashboardRoute } from './DashboardRoute'
+import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { OrdersDispatcher } from '@/features/orders/pages/OrdersDispatcher'
+import { OrderCreatePage } from '@/features/orders/pages/OrderCreatePage'
+import { OrderDetailPage } from '@/features/orders/pages/OrderDetailPage'
+import { OrderSummaryPage } from '@/features/orders/pages/OrderSummaryPage'
+import { ServiceCompletePage } from '@/features/jobs/pages/ServiceCompletePage'
 
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: (
-      <SuspenseWrapper>
-        <LoginPage />
-      </SuspenseWrapper>
-    ),
+    element: <LoginPage />,
   },
   {
     element: (
@@ -31,45 +24,29 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <SuspenseWrapper>
-            <DashboardRoute />
-          </SuspenseWrapper>
-        ),
+        element: <DashboardRoute />,
       },
       {
         path: 'orders',
-        element: (
-          <SuspenseWrapper>
-            <OrdersDispatcher />
-          </SuspenseWrapper>
-        ),
+        element: <OrdersDispatcher />,
       },
       {
         path: 'orders/new',
         element: (
           <ProtectedRoute roles={['admin']}>
-            <SuspenseWrapper>
-              <OrderCreatePage />
-            </SuspenseWrapper>
+            <OrderCreatePage />
           </ProtectedRoute>
         ),
       },
       {
         path: 'orders/:id',
-        element: (
-          <SuspenseWrapper>
-            <OrderDetailPage />
-          </SuspenseWrapper>
-        ),
+        element: <OrderDetailPage />,
       },
       {
         path: 'orders/:id/summary',
         element: (
           <ProtectedRoute roles={['admin']}>
-            <SuspenseWrapper>
-              <OrderSummaryPage />
-            </SuspenseWrapper>
+            <OrderSummaryPage />
           </ProtectedRoute>
         ),
       },
@@ -77,9 +54,7 @@ export const router = createBrowserRouter([
         path: 'orders/:id/complete',
         element: (
           <ProtectedRoute roles={['technician']}>
-            <SuspenseWrapper>
-              <ServiceCompletePage />
-            </SuspenseWrapper>
+            <ServiceCompletePage />
           </ProtectedRoute>
         ),
       },

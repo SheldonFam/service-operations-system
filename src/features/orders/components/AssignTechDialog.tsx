@@ -98,7 +98,7 @@ export function AssignTechDialog({ order, open, onClose }: AssignTechDialogProps
 
         {whatsappLink ? (
           <div className="space-y-3">
-            <WhatsAppLinkButton label={whatsappLink.label} url={whatsappLink.url} />
+            <WhatsAppLinkButton label={whatsappLink.label} url={whatsappLink.url} className="w-full justify-start" />
             <DialogFooter>
               <Button type="button" onClick={handleClose}>
                 Done

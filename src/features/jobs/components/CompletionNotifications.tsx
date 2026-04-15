@@ -29,7 +29,7 @@ export function CompletionNotifications({ notifications }: CompletionNotificatio
           <ul className="space-y-2">
             {notifications.map((n) => (
               <li key={n.url}>
-                <WhatsAppLinkButton label={`Send to ${n.label}`} url={n.url} />
+                <WhatsAppLinkButton label={`Send to ${n.label}`} url={n.url} className="w-full justify-start" />
               </li>
             ))}
           </ul>

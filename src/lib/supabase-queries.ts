@@ -172,48 +172,14 @@ export async function getUserProfile(userId: string): Promise<Result<User>> {
   return { data: (data as User | null) ?? null, error: err(error?.message) }
 }
 
-// ---------------------------------------------------------------------------
-// Cached user-list factory — technicians and managers use the same pattern.
-// ---------------------------------------------------------------------------
-
-function createCachedUserList(role: 'technician' | 'manager') {
-  let cache: User[] | undefined
-  let inflight: Promise<User[]> | undefined
-
-  function peek(): User[] | undefined {
-    return cache
-  }
-
-  function list(): Promise<User[]> {
-    if (cache) return Promise.resolve(cache)
-    if (inflight) return inflight
-
-    const promise: Promise<User[]> = Promise.resolve(
-      supabase.from('users').select('id, name, phone, branch, role').eq('role', role).order('name'),
-    )
-      .then(({ data }) => {
-        const result = (data as User[] | null) ?? []
-        if (result.length > 0) cache = result
-        return result
-      })
-      .finally(() => {
-        inflight = undefined
-      })
-
-    inflight = promise
-    return promise
-  }
-
-  return { peek, list }
+export async function listUsersByRole(role: 'technician' | 'manager'): Promise<Result<User[]>> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, phone, branch, role')
+    .eq('role', role)
+    .order('name')
+  return { data: (data as User[] | null) ?? [], error: err(error?.message) }
 }
-
-const techList = createCachedUserList('technician')
-const mgrList = createCachedUserList('manager')
-
-export const peekTechniciansCache = techList.peek
-export const listTechnicians = techList.list
-export const peekManagersCache = mgrList.peek
-export const listManagers = mgrList.list
 
 // ---------------------------------------------------------------------------
 // Jobs (technician views)

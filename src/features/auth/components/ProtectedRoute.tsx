@@ -13,7 +13,7 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user, role, loading } = useAuth()
 
   if (loading) {
-    return <Spinner />
+    return <Spinner fullScreen />
   }
 
   if (!user) {

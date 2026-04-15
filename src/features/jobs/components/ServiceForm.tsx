@@ -104,14 +104,7 @@ export function ServiceForm({ order }: ServiceFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <fieldset disabled={isBusy} className="space-y-6">
-        <OrderSummaryCard
-          customerName={order.customer_name}
-          serviceType={order.service_type}
-          problemDescription={order.problem_description}
-          quotedPrice={order.quoted_price}
-          technicianName={user?.name ?? ''}
-          completedAt={completedAt}
-        />
+        <OrderSummaryCard order={order} technicianName={user?.name ?? ''} completedAt={completedAt} />
 
         {/* Service Details */}
         <Card>
