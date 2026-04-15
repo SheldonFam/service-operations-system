@@ -2,9 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createOrder as createOrderQuery,
   getOrderById,
-  listManagers,
+  listUsersByRole,
   listOrders,
-  listTechnicians,
   updateOrder as updateOrderQuery,
   type ListOrdersOptions,
   type OrderUpdatable,
@@ -71,16 +70,24 @@ export function useUpdateOrder() {
 
 export function useTechnicians() {
   return useQuery({
-    queryKey: ['technicians'],
-    queryFn: () => listTechnicians(),
+    queryKey: ['users', 'technician'],
+    queryFn: async () => {
+      const { data, error } = await listUsersByRole('technician')
+      if (error) throw new Error(error)
+      return data ?? []
+    },
     staleTime: Infinity,
   })
 }
 
 export function useManagers() {
   return useQuery({
-    queryKey: ['managers'],
-    queryFn: () => listManagers(),
+    queryKey: ['users', 'manager'],
+    queryFn: async () => {
+      const { data, error } = await listUsersByRole('manager')
+      if (error) throw new Error(error)
+      return data ?? []
+    },
     staleTime: Infinity,
   })
 }

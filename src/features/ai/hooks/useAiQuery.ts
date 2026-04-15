@@ -11,15 +11,9 @@ export interface ChatMessage {
 
 const GENERIC_ERROR = "Couldn't read the AI response. Please try again."
 
-let messageIdCounter = 0
-function nextId() {
-  return `msg-${++messageIdCounter}`
-}
-
 export function useAiQuery() {
   const { session } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [lastFailedQuestion, setLastFailedQuestion] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: async (question: string): Promise<string> => {
@@ -44,58 +38,37 @@ export function useAiQuery() {
       }
 
       const parsed = aiQuerySuccessSchema.safeParse(raw)
-      if (!parsed.success) {
-        throw new Error(GENERIC_ERROR)
-      }
+      if (!parsed.success) throw new Error(GENERIC_ERROR)
 
       return parsed.data.answer
     },
+    onSuccess: (answer) => {
+      setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: crypto.randomUUID() }])
+    },
   })
 
-  const ask = async (question: string) => {
-    setLastFailedQuestion(null)
-
-    if (!session) {
-      setLastFailedQuestion(question)
-      return
-    }
-
-    const userMsg: ChatMessage = { role: 'user', content: question, id: nextId() }
-    setMessages((prev) => [...prev, userMsg])
-
-    try {
-      const answer = await mutation.mutateAsync(question)
-      setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: nextId() }])
-    } catch {
-      setLastFailedQuestion(question)
-    }
+  const ask = (question: string) => {
+    setMessages((prev) => [...prev, { role: 'user', content: question, id: crypto.randomUUID() }])
+    mutation.mutate(question)
   }
 
+  // The user message is already in `messages` from the failed ask() —
+  // re-run the mutation with the same question that React Query remembered.
   const retry = () => {
-    if (!lastFailedQuestion || mutation.isPending) return
-    setMessages((prev) => {
-      const lastUserIdx = [...prev].reverse().findIndex((m) => m.role === 'user')
-      if (lastUserIdx === -1) return prev
-      const idx = prev.length - 1 - lastUserIdx
-      return prev.slice(0, idx)
-    })
-    void ask(lastFailedQuestion)
+    if (mutation.variables && !mutation.isPending) {
+      mutation.mutate(mutation.variables)
+    }
   }
 
   const clear = () => {
     setMessages([])
-    setLastFailedQuestion(null)
     mutation.reset()
   }
-
-  const error =
-    mutation.error?.message ??
-    (lastFailedQuestion && !session ? 'Your session has expired. Please sign in again.' : null)
 
   return {
     messages,
     loading: mutation.isPending,
-    error,
+    error: mutation.error?.message ?? null,
     ask,
     retry,
     clear,

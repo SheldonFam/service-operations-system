@@ -59,40 +59,9 @@ function validateQuestion(input: unknown): ValidationResult {
   return { ok: true, value: cleaned }
 }
 
-// ---------------------------------------------------------------------------
-// Best-effort rate limiting
-// ---------------------------------------------------------------------------
-//
-// TODO: Replace with Vercel KV or Upstash Redis before going to production.
-// This in-memory Map only limits a single warm Vercel instance — new
-// instances get a fresh Map, so it provides almost no real protection.
-// Each Gemini API call has real cost; persistent rate-limiting is essential.
-
-const RATE_LIMIT_WINDOW_MS = 60_000
-const RATE_LIMIT_MAX = 10
-const recentCalls = new Map<string, number[]>()
-
-function isRateLimited(userId: string): boolean {
-  const now = Date.now()
-  const window = (recentCalls.get(userId) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-  if (window.length >= RATE_LIMIT_MAX) {
-    recentCalls.set(userId, window)
-    return true
-  }
-  window.push(now)
-  recentCalls.set(userId, window)
-
-  // Evict stale entries so the map can't grow without bound on a long-lived
-  // warm instance. Sweep on every call — the map is small and the cost is
-  // dominated by the upstream Gemini round-trip anyway.
-  for (const [id, times] of recentCalls) {
-    if (id === userId) continue // already updated above
-    const fresh = times.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-    if (fresh.length === 0) recentCalls.delete(id)
-    else if (fresh.length !== times.length) recentCalls.set(id, fresh)
-  }
-  return false
-}
+// TODO: Add persistent rate limiting (Upstash Redis or Vercel KV) before
+// production. In-memory rate limiting doesn't work on serverless — each cold
+// start gets a fresh state.
 
 // ---------------------------------------------------------------------------
 // Auth — verify the caller's JWT and ensure they are a manager
@@ -213,10 +182,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const auth = await authorize(req)
   if (!auth.ok) {
     return res.status(auth.status).json({ error: auth.error })
-  }
-
-  if (isRateLimited(auth.userId)) {
-    return res.status(429).json({ error: 'Too many requests. Please slow down.' })
   }
 
   const validated = validateQuestion((req.body as Record<string, unknown> | undefined)?.question)
