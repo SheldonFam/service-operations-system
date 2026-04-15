@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { aiQueryErrorSchema, aiQuerySuccessSchema } from '../schemas/ai-query.schema'
@@ -52,29 +52,26 @@ export function useAiQuery() {
     },
   })
 
-  const ask = useCallback(
-    async (question: string) => {
-      setLastFailedQuestion(null)
+  const ask = async (question: string) => {
+    setLastFailedQuestion(null)
 
-      if (!session) {
-        setLastFailedQuestion(question)
-        return
-      }
+    if (!session) {
+      setLastFailedQuestion(question)
+      return
+    }
 
-      const userMsg: ChatMessage = { role: 'user', content: question, id: nextId() }
-      setMessages((prev) => [...prev, userMsg])
+    const userMsg: ChatMessage = { role: 'user', content: question, id: nextId() }
+    setMessages((prev) => [...prev, userMsg])
 
-      try {
-        const answer = await mutation.mutateAsync(question)
-        setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: nextId() }])
-      } catch {
-        setLastFailedQuestion(question)
-      }
-    },
-    [mutation, session],
-  )
+    try {
+      const answer = await mutation.mutateAsync(question)
+      setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: nextId() }])
+    } catch {
+      setLastFailedQuestion(question)
+    }
+  }
 
-  const retry = useCallback(() => {
+  const retry = () => {
     if (!lastFailedQuestion || mutation.isPending) return
     setMessages((prev) => {
       const lastUserIdx = [...prev].reverse().findIndex((m) => m.role === 'user')
@@ -83,13 +80,13 @@ export function useAiQuery() {
       return prev.slice(0, idx)
     })
     void ask(lastFailedQuestion)
-  }, [ask, lastFailedQuestion, mutation.isPending])
+  }
 
-  const clear = useCallback(() => {
+  const clear = () => {
     setMessages([])
     setLastFailedQuestion(null)
     mutation.reset()
-  }, [mutation])
+  }
 
   const error =
     mutation.error?.message ??
