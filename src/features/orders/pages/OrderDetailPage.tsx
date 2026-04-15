@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { PageLoader } from '@/app/lazy-pages'
+import { PageSkeleton } from '@/app/PageSkeleton'
 import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { OrderDetail } from '../components/OrderDetail'
 import { OrderActions } from '../components/OrderActions'
@@ -45,7 +45,7 @@ export function OrderDetailPage() {
   const { role } = useAuth()
   const { data: order, isPending } = useOrder(id ?? '')
 
-  if (isPending) return <PageLoader />
+  if (isPending) return <PageSkeleton />
 
   if (!order) {
     return <NotFoundFallback />

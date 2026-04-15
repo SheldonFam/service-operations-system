@@ -4,7 +4,7 @@ import { NotFoundFallback } from '@/components/NotFoundFallback'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { PageLoader } from '@/app/lazy-pages'
+import { PageSkeleton } from '@/app/PageSkeleton'
 import { StatusBadge } from '../components/StatusBadge'
 import { useOrder } from '../hooks/useOrders'
 import { SERVICE_TYPE_COLORS } from '@/lib/constants'
@@ -15,7 +15,7 @@ export function OrderSummaryPage() {
   const { id } = useParams<{ id: string }>()
   const { data: order, isPending } = useOrder(id ?? '')
 
-  if (isPending) return <PageLoader />
+  if (isPending) return <PageSkeleton />
 
   if (!order) {
     return <NotFoundFallback />
