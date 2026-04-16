@@ -9,8 +9,6 @@ export const serviceSchema = z.object({
     .max(2000, 'Description must be under 2000 characters'),
   extra_charges: z
     .number()
-    // react-hook-form's `valueAsNumber` passes NaN when the input is cleared.
-    // Coerce NaN → 0 so downstream math (final_amount) never receives NaN.
     .transform((v) => (Number.isFinite(v) ? v : 0))
     .pipe(z.number().min(0, 'Cannot be negative').max(50000, 'Extra charges must be under RM 50,000')),
   remarks: z.string().max(500, 'Remarks must be under 500 characters').optional(),
