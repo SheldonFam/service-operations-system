@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { aiQueryErrorSchema, aiQuerySuccessSchema } from '../schemas/ai-query.schema'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -9,66 +9,60 @@ export interface ChatMessage {
   id: string
 }
 
-const GENERIC_ERROR = "Couldn't read the AI response. Please try again."
+function toDisplayContent(m: UIMessage): string {
+  return m.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+    .map((p) => p.text)
+    .join('')
+}
 
 export function useAiQuery() {
   const { session } = useAuth()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [lastQuestion, setLastQuestion] = useState<string | null>(null)
 
-  const mutation = useMutation({
-    mutationFn: async (question: string): Promise<string> => {
-      if (!session) {
-        throw new Error('Your session has expired. Please sign in again.')
-      }
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: '/api/ai-query',
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      }),
+    [session],
+  )
 
-      const res = await fetch('/api/ai-query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ question }),
-      })
+  const { messages, sendMessage, status, error, setMessages, regenerate } = useChat({ transport })
 
-      const raw: unknown = await res.json().catch(() => null)
+  const loading = status === 'submitted' || status === 'streaming'
 
-      if (!res.ok) {
-        const parsed = aiQueryErrorSchema.safeParse(raw)
-        throw new Error(parsed.success ? parsed.data.error : 'Something went wrong.')
-      }
-
-      const parsed = aiQuerySuccessSchema.safeParse(raw)
-      if (!parsed.success) throw new Error(GENERIC_ERROR)
-
-      return parsed.data.answer
-    },
-    onSuccess: (answer) => {
-      setMessages((prev) => [...prev, { role: 'assistant', content: answer, id: crypto.randomUUID() }])
-    },
-  })
+  const displayMessages: ChatMessage[] = messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => ({ id: m.id, role: m.role as 'user' | 'assistant', content: toDisplayContent(m) }))
+    // Hide empty assistant placeholders while the first token is still in flight.
+    .filter((m) => m.role === 'user' || m.content.length > 0)
 
   const ask = (question: string) => {
-    setMessages((prev) => [...prev, { role: 'user', content: question, id: crypto.randomUUID() }])
-    mutation.mutate(question)
+    if (!session) return
+    setLastQuestion(question)
+    void sendMessage({ text: question })
   }
 
-  // The user message is already in `messages` from the failed ask() —
-  // re-run the mutation with the same question that React Query remembered.
   const retry = () => {
-    if (mutation.variables && !mutation.isPending) {
-      mutation.mutate(mutation.variables)
+    if (loading) return
+    if (messages.length > 0) {
+      void regenerate()
+      return
     }
+    if (lastQuestion) void sendMessage({ text: lastQuestion })
   }
 
   const clear = () => {
     setMessages([])
-    mutation.reset()
+    setLastQuestion(null)
   }
 
   return {
-    messages,
-    loading: mutation.isPending,
-    error: mutation.error?.message ?? null,
+    messages: displayMessages,
+    loading,
+    error: error?.message ?? null,
     ask,
     retry,
     clear,
