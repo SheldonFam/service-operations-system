@@ -39,19 +39,27 @@ export function useAiQuery() {
     // Hide empty assistant placeholders while the first token is still in flight.
     .filter((m) => m.role === 'user' || m.content.length > 0)
 
-  const ask = (question: string) => {
+  const ask = async (question: string) => {
     if (!session) return
     setLastQuestion(question)
-    void sendMessage({ text: question })
+    try {
+      await sendMessage({ text: question })
+    } catch (err) {
+      console.error('[ai] sendMessage failed', err)
+    }
   }
 
-  const retry = () => {
+  const retry = async () => {
     if (loading) return
-    if (messages.length > 0) {
-      void regenerate()
-      return
+    try {
+      if (messages.length > 0) {
+        await regenerate()
+      } else if (lastQuestion) {
+        await sendMessage({ text: lastQuestion })
+      }
+    } catch (err) {
+      console.error('[ai] retry failed', err)
     }
-    if (lastQuestion) void sendMessage({ text: lastQuestion })
   }
 
   const clear = () => {

@@ -20,11 +20,19 @@ export function ServiceCompletePage() {
     return <NotFoundFallback backLabel="Back to jobs" />
   }
 
+  const handleBackToDetail = async () => {
+    try {
+      await navigate(`/orders/${order.id}`)
+    } catch (err) {
+      console.error('[nav] back to detail failed', err)
+    }
+  }
+
   if (!canComplete(order.status)) {
     return (
       <div className="py-12 text-center">
         <p className="text-muted-foreground">This job cannot be completed in its current status.</p>
-        <Button variant="link" onClick={() => void navigate(`/orders/${order.id}`)}>
+        <Button variant="link" onClick={handleBackToDetail}>
           Back to job detail
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type SyntheticEvent } from 'react'
 import Markdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,17 +23,17 @@ export function AiChatWindow() {
     scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight)
   }, [messages, error, loading])
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     const q = input.trim()
     if (!q || loading) return
     setInput('')
-    void ask(q)
+    await ask(q)
   }
 
-  const handleSuggestion = (q: string) => {
+  const handleSuggestion = async (q: string) => {
     if (loading) return
-    void ask(q)
+    await ask(q)
   }
 
   return (
