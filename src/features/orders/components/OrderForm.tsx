@@ -74,7 +74,11 @@ function OrderFormInner({ technicians }: { technicians: User[] }) {
     try {
       const order = await createOrderMutation.mutateAsync({ values, createdBy: user.id })
       toast.success(`Order ${order.order_no} created successfully`)
-      void navigate(`/orders/${order.id}/summary`)
+      try {
+        await navigate(`/orders/${order.id}/summary`)
+      } catch (err) {
+        console.error('[nav] go to summary failed', err)
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to create order')
     }
