@@ -32,11 +32,14 @@ const google = GEMINI_API_KEY ? createGoogleGenerativeAI({ apiKey: GEMINI_API_KE
 
 const MAX_QUESTION_LENGTH = 500
 
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g
-
 function sanitize(input: string): string {
-  return input.replace(CONTROL_CHARS, '').trim()
+  return Array.from(input)
+    .filter((char) => {
+      const code = char.charCodeAt(0)
+      return code >= 0x20 || code === 0x09 || code === 0x0a || code === 0x0d
+    })
+    .join('')
+    .trim()
 }
 
 type AuthResult = { ok: true; userId: string } | { ok: false; status: number; error: string }
@@ -228,6 +231,8 @@ function buildSystemPrompt(): string {
 Today's date is ${today}.
 
 Answer questions about service operations by calling the provided tools to fetch the data you need. Do not guess — if the tools don't return what's needed, say so.
+
+You can combine and aggregate tool results to answer complex questions. For example, to find which technician completed the most jobs, fetch completed orders with getOrders and count by technician name from the results.
 
 Time periods:
 - "today" = ${today}
