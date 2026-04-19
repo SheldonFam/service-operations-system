@@ -27,7 +27,7 @@ export function AppLayout() {
     <>
       <SkipLink />
       {hasSidebar && <AdminSidebar />}
-      <div className={cn('flex flex-1 flex-col', !hasSidebar && 'min-h-screen')}>
+      <div className={cn('flex min-w-0 flex-1 flex-col', !hasSidebar && 'min-h-screen')}>
         <Header />
         <main
           id="main-content"
